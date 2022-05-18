@@ -22,12 +22,7 @@ from geocat.viz import util as gvutil
 
 
 from acIndUtils import acIndUtils
-
-
-fontSizeLegend = 15
-fontSizeTickLabels = 14
-fontSizeAxisLabel = 16
-fontSizeTitle = 17
+from acIndUtils import acIndGrahUtils as gutl
 
 
     
@@ -51,11 +46,11 @@ def acSSTViolinPlot(dailySSTCsv):
     fig, axes = plt.subplots(1, figsize=(18,8), dpi= 100)
     sns.violinplot(x='month', y=tCol.name, data=file2.loc[~file2.month.isin([1987, 2019]), :], palette="tab10", bw=.2, cut=1, linewidth=1)
 
-    plt.title("SST, monthly violin diagram", fontsize=fontSizeTitle)
-    plt.xticks(size = fontSizeTickLabels)
-    plt.yticks(size = fontSizeTickLabels)
-    plt.xlabel('Month',fontsize=fontSizeAxisLabel)
-    plt.ylabel('Sea Surface Temperature (C)',fontsize=fontSizeAxisLabel)
+    plt.title("SST, monthly violin diagram", fontsize=gutl.fontSizeTitle)
+    plt.xticks(size = gutl.fontSizeTickLabels)
+    plt.yticks(size = gutl.fontSizeTickLabels)
+    plt.xlabel('Month',fontsize=gutl.fontSizeAxisLabel)
+    plt.ylabel('Sea Surface Temperature (C)',fontsize=gutl.fontSizeAxisLabel)
 
     return fig
 
@@ -104,14 +99,14 @@ def acPlotSSTTimeSeries(dailySSTCsv):
 
     plt.grid("on")
 
-    plt.legend(fontsize=fontSizeLegend, loc="upper left", frameon=False)
-    plt.xticks(fontsize=fontSizeTickLabels)
-    plt.yticks(fontsize=fontSizeTickLabels)
+    plt.legend(fontsize=gutl.fontSizeLegend, loc="upper left", frameon=False)
+    plt.xticks(fontsize=gutl.fontSizeTickLabels)
+    plt.yticks(fontsize=gutl.fontSizeTickLabels)
 
-    plt.xlabel("Year", fontsize=fontSizeAxisLabel)
-    plt.ylabel("SST anomaly", fontsize=fontSizeAxisLabel)
+    plt.xlabel("Year", fontsize=gutl.fontSizeAxisLabel)
+    plt.ylabel("SST anomaly", fontsize=gutl.fontSizeAxisLabel)
 
-    plt.title("SST anomaly", fontsize=fontSizeTitle)
+    plt.title("SST anomaly", fontsize=gutl.fontSizeTitle)
 
     plt.tight_layout()
 
@@ -171,7 +166,7 @@ def plotMeanMap(meanNcFileSpec, plotTitle):
                         orientation='vertical',
                         ticks=cbar_ticks,
                         cax=cax)
-    cax.tick_params(labelsize=fontSizeTickLabels)
+    cax.tick_params(labelsize=gutl.fontSizeTickLabels)
     
     plt.axes(ax)
     ax.set_extent([12, 20.2, 39.7, 46])
@@ -234,7 +229,7 @@ def plotTrendMap(trendNcFileSpec):
                         orientation='vertical',
                         ticks=cbar_ticks,
                         cax=cax)
-    cax.tick_params(labelsize=fontSizeTickLabels)
+    cax.tick_params(labelsize=gutl.fontSizeTickLabels)
     
     plt.axes(ax)
     ax.set_extent([12, 20.2, 39.7, 46])

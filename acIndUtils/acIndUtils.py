@@ -7,6 +7,10 @@ import pandas as pd
 import netCDF4
 from shapely import geometry as g
 
+import warnings
+
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
 
 class acNcFileSpec:
     
@@ -254,4 +258,108 @@ def acComputeSenSlope2DMap(annualMapsNcSpec, outputNcFile, smoothingKernelSide=3
 
     # saving
     slp.to_netcdf(outputNcFile)
+
+
+
+
+def acComputeSenSlope3DMap(annualMapsNcSpec, outputNcFile):
+    """
+    computeSenSlopeMap: generates a map with the sen's slope for each pixel in the 3D map, given the series of annual maps in file inputNcFile.
+    input:
+      annualMapsNcFile: input nc file with annual maps of the variable of interest. The time variable is assumed to be called "year".
+    output:
+      outputNcFile: file where the slope is stored.
+    """
+    inputDs = xr.open_dataset(annualMapsNcSpec.ncFileName)
+  
+    def _compSenSlope(vals):
+      alpha = .95
+      medslope, _, _, _ = stats.mstats.theilslopes(vals, alpha=alpha)
+      return medslope
+  
+    slp = xr.apply_ufunc(_compSenSlope, inputDs, input_core_dims=[["year"]], dask="allowed", vectorize=True)
+
+    # saving
+    slp.to_netcdf(outputNcFile)
+
+
+
+
+def acGetVProfile(ac3DFieldNcSpec, maxDepth, zlevs=None):
+    """
+    acGetVProfile: computes a vertical profile for a given 3D file. If time is included in the file, this is also taken into account.
+    Input:
+        ac3DFieldNcSpec: file spec with 3D file.
+        maxDepth: depth down to which the profile is computed.
+        zlevs: vertical coordinates. If this parameter is not given, the coordinates found in the file are used.
+    Output:
+        dpth: depth
+        vprov: vertical profile
+    """
+    assert maxDepth < 0
+    ds = xr.open_dataset(ac3DFieldNcSpec.ncFileName)
+    meandims = [ac3DFieldNcSpec.xVarName, ac3DFieldNcSpec.yVarName]
+    if ac3DFieldNcSpec.tVarName in ds:
+        meandims.append(ac3DFieldNcSpec.tVarName)
+    vprof_ = ds.mean(dim=meandims, skipna=True)
+    dpth = vprof_[ac3DFieldNcSpec.zVarName].values
+    vprof = vprof_[ac3DFieldNcSpec.varName].values
+    if np.max(dpth) > 0:
+        dpth=-dpth
+    assert len(vprof.shape) == 1
+    if not zlevs is None:
+        assert np.min(zlevs) < 0
+        if np.nanmean(np.diff(dpth)[0]) < 0:
+            dpth = dpth[::-1]
+            vprof = vprof[::-1]
+        vprof_ = vprof
+        vprof = np.interp(zlevs, dpth, vprof_)
+        dpth = zlevs
+    cnd = dpth > maxDepth
+    dpth = dpth[cnd]
+    vprof = vprof[cnd]
+    ds.close()
+    return dpth, vprof
+
+
+
+
+def acGetVProfileStDev(ac3DFieldNcSpec, maxDepth, zlevs=None):
+    """
+    acGetVProfile: computes the standard deviation of the vertical profile for a given 3D file. 
+    If time is included in the file, this is also taken into account.
+    Input:
+        ac3DFieldNcSpec: file spec with 3D file.
+        maxDepth: depth down to which the profile is computed.
+        zlevs: vertical coordinates. If this parameter is not given, the coordinates found in the file are used.
+    Output:
+        dpth: depth
+        vprov: standard devition of the vertical profile
+    """
+    assert maxDepth < 0
+    ds = xr.open_dataset(ac3DFieldNcSpec.ncFileName)
+    meandims = [ac3DFieldNcSpec.xVarName, ac3DFieldNcSpec.yVarName]
+    if ac3DFieldNcSpec.tVarName in ds:
+        meandims.append(ac3DFieldNcSpec.tVarName)
+    vprof_ = ds.std(dim=meandims, skipna=True)
+    dpth = vprof_[ac3DFieldNcSpec.zVarName].values
+    vprof = vprof_[ac3DFieldNcSpec.varName].values
+    if np.max(dpth) > 0:
+        dpth=-dpth
+    assert len(vprof.shape) == 1
+    if not zlevs is None:
+        assert np.min(zlevs) < 0
+        if np.nanmean(np.diff(dpth)[0]) < 0:
+            dpth = dpth[::-1]
+            vprof = vprof[::-1]
+        vprof_ = vprof
+        vprof = np.interp(zlevs, dpth, vprof_)
+        dpth = zlevs
+    cnd = dpth > maxDepth
+    dpth = dpth[cnd]
+    vprof = vprof[cnd]
+    ds.close()
+    return dpth, vprof
+
+    
 
