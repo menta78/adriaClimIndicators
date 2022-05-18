@@ -1,4 +1,5 @@
 import os
+from glob import glob
 import numpy as np
 from scipy import stats, signal
 import xarray as xr
@@ -78,7 +79,15 @@ def acClipDataOnRegion(dataInputNcSpec, areaPerimeter, dataOutputNcFpath):
     lon_max = areaPerLon.max()
     lon_min = areaPerLon.min()
 
-    inputNc = xr.open_dataset(dataInputNcSpec.ncFileName)
+    fls = glob(dataInputNcSpec.ncFileName)
+    if len(fls) == 1:
+        inputNc = xr.open_dataset(dataInputNcSpec.ncFileName)
+    elif len(fls) > 1:
+       #inputNc = xr.open_mfdataset(dataInputNcSpec.ncFileName, chunks="auto")
+        inputNc = xr.open_mfdataset(dataInputNcSpec.ncFileName, parallel=True)
+    else:
+        raise Exception(f"file {dataInputNcSpec.ncFileName} not found")
+
     nclon = inputNc[dataInputNcSpec.xVarName]
     nclat = inputNc[dataInputNcSpec.yVarName]
     t = inputNc.sel({dataInputNcSpec.yVarName:slice(lat_min,lat_max), dataInputNcSpec.xVarName:slice(lon_min,lon_max)})
@@ -122,10 +131,8 @@ def acClipDataOnRegion(dataInputNcSpec, areaPerimeter, dataOutputNcFpath):
 
     
 
-def __acGenerate2DAnnualMeanMaps(inputNcSpec, outputFileName, timeSelector):
+def __acGenerateAnnualMeanMaps(inputNcSpec, outputFileName, timeSelector):
     inDt = xr.open_dataset(inputNcSpec.ncFileName)
-    xx = inDt[inputNcSpec.xVarName]
-    yy = inDt[inputNcSpec.yVarName]
     tm = inDt[inputNcSpec.tVarName]
 
     _sel = inDt.sel({tm.name: timeSelector(tm)})
@@ -137,36 +144,36 @@ def __acGenerate2DAnnualMeanMaps(inputNcSpec, outputFileName, timeSelector):
     
 
 
-def acGenerate2DAnnualMeanMaps(inputNcSpec, annualMapsNcFile): 
+def acGenerateAnnualMeanMaps(inputNcSpec, annualMapsNcFile): 
     
     """ Annual Mean map on previously clipped data within 33 years
     """
     def AM(tm):
         month = tm.dt.month
         return (month >= 1) & (month <= 12)
-    __acGenerate2DAnnualMeanMaps(inputNcSpec, annualMapsNcFile, AM)
+    __acGenerateAnnualMeanMaps(inputNcSpec, annualMapsNcFile, AM)
     
 
 
-def acGenerate2DSeasonalWinter(inputNcSpec, winterMapsNcFile):
+def acGenerateSeasonalWinter(inputNcSpec, winterMapsNcFile):
     
     """ Winter Period time selection for the creation of WINTER PERIOD NetCDF file, over previously clipped data
     """    
     def WINTER(tm):
         month = tm.dt.month
         return (month >= 1) & (month <= 4)
-    __acGenerate2DAnnualMeanMaps(inputNcSpec, winterMapsNcFile, WINTER)
+    __acGenerateAnnualMeanMaps(inputNcSpec, winterMapsNcFile, WINTER)
 
 
     
-def acGenerate2DSeasonalSummer(inputNcSpec, summerMapsNcFile):
+def acGenerateSeasonalSummer(inputNcSpec, summerMapsNcFile):
     
     """ Summer Period time selection for the creation of SUMMER PERIOD NetCDF file, over previously clipped data
     """
     def SUMMER(tm):
         month = tm.dt.month
         return (month >= 7) & (month <= 10)
-    __acGenerate2DAnnualMeanMaps(inputNcSpec, summerMapsNcFile, SUMMER)
+    __acGenerateAnnualMeanMaps(inputNcSpec, summerMapsNcFile, SUMMER)
 
 
 
