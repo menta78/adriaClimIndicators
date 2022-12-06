@@ -86,10 +86,10 @@ def acClipDataOnRegion(dataInputNcSpec, areaPerimeter, dataOutputNcFpath, otherV
 
     fls = glob(dataInputNcSpec.ncFileName)
     if len(fls) == 1:
-        inputNc = xr.open_dataset(dataInputNcSpec.ncFileName)
+        inputNc = xr.open_dataset(dataInputNcSpec.ncFileName, decode_times=False)
     elif len(fls) > 1:
        #inputNc = xr.open_mfdataset(dataInputNcSpec.ncFileName, chunks="auto")
-        inputNc = xr.open_mfdataset(dataInputNcSpec.ncFileName, parallel=True)
+        inputNc = xr.open_mfdataset(dataInputNcSpec.ncFileName, parallel=True, decode_times=False)
     else:
         raise Exception(f"file {dataInputNcSpec.ncFileName} not found")
 
@@ -106,28 +106,36 @@ def acClipDataOnRegion(dataInputNcSpec, areaPerimeter, dataOutputNcFpath, otherV
         t = t.transpose(dataInputNcSpec.tVarName, dataInputNcSpec.yVarName, dataInputNcSpec.xVarName)
 
     print ('preselecting the mininumn containing rectangle, saving to ', dataOutputNcFpath)
+
     if os.path.isfile(dataOutputNcFpath):
         os.remove(dataOutputNcFpath)
-    t.to_netcdf(path=dataOutputNcFpath)
-    t.close()
 
-    print ('clipping over the polygon and storing frame by frame (may take a while ...)')
-    ds = netCDF4.Dataset(dataOutputNcFpath, "r+")
-    lon = ds.variables[dataInputNcSpec.xVarName][:]
-    lat = ds.variables[dataInputNcSpec.yVarName][:]
-    lonmtx, latmtx = np.meshgrid(lon, lat)
-    nframe = ds.variables[dataInputNcSpec.tVarName].shape[0]
+    lon = inputNc[dataInputNcSpec.xVarName].values
+    lat = inputNc[dataInputNcSpec.yVarName].values
+    zzz = inputNc[dataInputNcSpec.zVarName].values if dataInputNcSpec.zVarName in inputNc else None
+    tms = inputNc[dataInputNcSpec.tVarName].values
+    timeUnitsStr = inputNc[dataInputNcSpec.tVarName].attrs["units"]
     varNames = [dataInputNcSpec.varName]
     varNames.extend(otherVarNames)
 
+    print ('clipping over the polygon and storing frame by frame (may take a while ...)')
+    outNcFlSpec = acCloneFileSpec(dataInputNcSpec, ncFileName=dataOutputNcFpath)
+    outFl = acNcFile(outNcFlSpec, lon, lat, zzz, varNames, timeUnitsStr)
+    outFl.createFile()
+    ds = outFl.ds
+    ds[outNcFlSpec.tVarName][:] = tms
+    lonmtx, latmtx = np.meshgrid(lon, lat)
+    nframe = ds.variables[dataInputNcSpec.tVarName].shape[0]
+
     for varName in varNames:
+        varsrc = inputNc[varName]
         varnc = ds.variables[varName]
         mask3d = None
         for ifrm in range(nframe):
             if ifrm % 100 == 0:
                 percDone = ifrm/nframe*100
                 print(f"  done {percDone:2.0f} %", end="\r")
-            vls = varnc[ifrm, :]
+            vls = varsrc.values[ifrm, :]
             vls3d = vls if hasZCoord else np.expand_dims(vls, 0)
             if mask3d is None:
                 mask3d = _get3DMaskOnPolygon(lonmtx, latmtx, vls3d, areaPerimeter.values)
