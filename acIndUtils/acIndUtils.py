@@ -144,6 +144,7 @@ def acClipDataOnRegion(dataInputNcSpec, areaPerimeter, dataOutputNcFpath, otherV
             clp = clp3d if hasZCoord else clp3d[0,:]
             varnc[ifrm, :] = clp
     ds.close()
+    inputNc.close()
     print("")
 
     
