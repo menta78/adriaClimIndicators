@@ -61,7 +61,7 @@ def _get3DMaskOnPolygon(lon, lat, map3D, polygon):
     return mask3D
 
         
-def acClipDataOnRegion(dataInputNcSpec, areaPerimeter, dataOutputNcFpath):
+def acClipDataOnRegion(dataInputNcSpec, areaPerimeter, dataOutputNcFpath, otherVarNames=[]):
        
     """ CLIP INPUT OVER THE AREA OF INTEREST.
      Input File
@@ -69,6 +69,7 @@ def acClipDataOnRegion(dataInputNcSpec, areaPerimeter, dataOutputNcFpath):
      areaPerimeter: pandas dataset delimiting the area being analysed. In the dataset, the 1st column is longitude, 
      the 2nd column is latitude 
      dataOutputNcFpath: path of the output nc file.
+     otherVarNames: names of other variables to be clipped, if present
     """
     
     print("CMEMS SST Dimension:",dataInputNcSpec)
@@ -100,13 +101,13 @@ def acClipDataOnRegion(dataInputNcSpec, areaPerimeter, dataOutputNcFpath):
 
     #ensuring that the dimensions are in the correct order
     if hasZCoord:
-      t = t.transpose(dataInputNcSpec.tVarName, dataInputNcSpec.zVarName, dataInputNcSpec.yVarName, dataInputNcSpec.xVarName)
+        t = t.transpose(dataInputNcSpec.tVarName, dataInputNcSpec.zVarName, dataInputNcSpec.yVarName, dataInputNcSpec.xVarName)
     else:
-      t = t.transpose(dataInputNcSpec.tVarName, dataInputNcSpec.yVarName, dataInputNcSpec.xVarName)
+        t = t.transpose(dataInputNcSpec.tVarName, dataInputNcSpec.yVarName, dataInputNcSpec.xVarName)
 
     print ('preselecting the mininumn containing rectangle, saving to ', dataOutputNcFpath)
     if os.path.isfile(dataOutputNcFpath):
-      os.remove(dataOutputNcFpath)
+        os.remove(dataOutputNcFpath)
     t.to_netcdf(path=dataOutputNcFpath)
     t.close()
 
@@ -116,20 +117,24 @@ def acClipDataOnRegion(dataInputNcSpec, areaPerimeter, dataOutputNcFpath):
     lat = ds.variables[dataInputNcSpec.yVarName][:]
     lonmtx, latmtx = np.meshgrid(lon, lat)
     nframe = ds.variables[dataInputNcSpec.tVarName].shape[0]
-    varnc = ds.variables[dataInputNcSpec.varName]
-    mask3d = None
-    for ifrm in range(nframe):
-      if ifrm % 100 == 0:
-        percDone = ifrm/nframe*100
-        print(f"  done {percDone:2.0f} %", end="\r")
-      vls = varnc[ifrm, :]
-      vls3d = vls if hasZCoord else np.expand_dims(vls, 0)
-      if mask3d is None:
-        mask3d = _get3DMaskOnPolygon(lonmtx, latmtx, vls3d, areaPerimeter.values)
-      clp3d = vls3d.copy()
-      clp3d[~mask3d] = np.nan
-      clp = clp3d if hasZCoord else clp3d[0,:]
-      varnc[ifrm, :] = clp
+    varNames = [dataInputNcSpec.varName]
+    varNames.extend(otherVarNames)
+
+    for varName in varNames:
+        varnc = ds.variables[varName]
+        mask3d = None
+        for ifrm in range(nframe):
+            if ifrm % 100 == 0:
+                percDone = ifrm/nframe*100
+                print(f"  done {percDone:2.0f} %", end="\r")
+            vls = varnc[ifrm, :]
+            vls3d = vls if hasZCoord else np.expand_dims(vls, 0)
+            if mask3d is None:
+                mask3d = _get3DMaskOnPolygon(lonmtx, latmtx, vls3d, areaPerimeter.values)
+            clp3d = vls3d.copy()
+            clp3d[~mask3d] = np.nan
+            clp = clp3d if hasZCoord else clp3d[0,:]
+            varnc[ifrm, :] = clp
     ds.close()
     print("")
 
@@ -362,4 +367,71 @@ def acGetVProfileStDev(ac3DFieldNcSpec, maxDepth, zlevs=None):
     return dpth, vprof
 
     
+class acNcFile:
+
+    def __init__(self, ncFileSpec, xx, yy, zz=None, varNames=None, 
+                       timeUnitsStr=""):
+        self.ncFileSpec = ncFileSpec
+        self.xx = xx
+        self.yy = yy
+        self.zz = zz
+        self.varNames = (varNames if not varNames is None
+                                  else [ncFileSpec.varName])
+        self.timeUnitsStr = timeUnitsStr
+        self.calendar = "standard"
+
+    def createFile(self):
+        fs = self.ncFileSpec
+        self.ds = netCDF4.Dataset(fs.ncFileName, "w")
+        self.tDim = self.ds.createDimension(fs.tVarName, None)
+        if len(self.yy.shape) == 1:
+            self.yDim = self.ds.createDimension(fs.yVarName, self.yy.shape[0])
+            self.xDim = self.ds.createDimension(fs.xVarName, self.xx.shape[0])
+            self.yVar = self.ds.createVariable(fs.yVarName, 'f4', (fs.yVarName,))
+            self.xVar = self.ds.createVariable(fs.xVarName, 'f4', (fs.xVarName,))
+        else:
+            raise Exception("2d x, y coords: not yet supported")
+
+        self.tVar = self.ds.createVariable(fs.tVarName, 'f4', (fs.tVarName,))
+        self.tVar.units = self.timeUnitsStr
+        self.tVar.calendar = self.calendar
+        if not self.zz is None:
+            self.zDim = self.ds.createDimension(fs.zVarName, zz.shape)
+            self.zVar = self.ds.createVariable(fs.zVarName, 'f4', 
+                                              (fs.zVarName,))
+            dims = [fs.tVarName, fs.zVarName, fs.yVarName, fs.xVarName]
+        else:
+            dims = [fs.tVarName, fs.yVarName, fs.xVarName]
+        self.yVar[:] = self.yy[:]
+        self.xVar[:] = self.xx[:]
+        self.vars = {}
+        for varName in self.varNames:
+            self.vars[varName] = self.ds.createVariable(varName,
+                                                        'f4',
+                                                        dims)
+        self.ntime = 0
+        
+    def writeVariables(self, dateTimes, **kwargs):
+        newNTime = len(dateTimes)
+        tmnums = netCDF4.date2num(dateTimes, self.timeUnitsStr, self.calendar)
+        self.tVar[self.ntime:self.ntime+newNTime] = tmnums
+        for varName in kwargs.keys():
+            vr = kwargs[varName]
+            if vr.shape[0] != newNTime:
+                raise Exception("""acIndUtils.writeVariables: 
+                                   the number of time frame must be the same 
+                                   for all the variables""")
+            self.vars[varName][self.ntime:self.ntime+newNTime] = vr
+        self.ntime += newNTime
+
+    def close(self):
+        self.ds.close()
+        self.ds = None
+        
+
+
+
+
+
+        
 

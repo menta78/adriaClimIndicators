@@ -19,38 +19,8 @@ from acIndUtils import acIndUtils
 from acIndUtils import acIndGrahUtils as gutl
 
 
-    
-def acSSTViolinPlot(dailySSTCsv):   
 
-    """ Monthly TS Violin Plot 
-    input: dailySSTCsv, csv file path of the daily values of SST
-    """ 
-    
-    dateColId = 0
-    sstColId = 1
-        
-    file2 = pd.read_csv(dailySSTCsv)
-    file2.iloc[:,dateColId] = pd.to_datetime(file2.iloc[:,dateColId])
-    dateCol = file2.iloc[:,dateColId]
-    tCol = file2.iloc[:,sstColId]
-    file2['Time Series from 1987 to 2019'] = [d.year for d in dateCol]
-    file2['month'] = [d.strftime('%b') for d in dateCol]
-    years = file2['Time Series from 1987 to 2019'].unique()
-
-    fig, axes = plt.subplots(1, figsize=(18,8), dpi= 100)
-    sns.violinplot(x='month', y=tCol.name, data=file2.loc[~file2.month.isin([1987, 2019]), :], palette="tab10", bw=.2, cut=1, linewidth=1)
-
-    plt.title("SST, monthly violin diagram", fontsize=gutl.fontSizeTitle)
-    plt.xticks(size = gutl.fontSizeTickLabels)
-    plt.yticks(size = gutl.fontSizeTickLabels)
-    plt.xlabel('Month',fontsize=gutl.fontSizeAxisLabel)
-    plt.ylabel('Sea Surface Temperature (C)',fontsize=gutl.fontSizeAxisLabel)
-
-    return fig
-
-
-
-def acPlotSSTTimeSeries(dailySSTCsv):
+def acPlotTimeSeries(dailySSTCsv, plotTitle):
     """
     Plot of the time series of SST and of its trend
     input: dailySSTCsv, csv file path of the daily values of SST
@@ -98,9 +68,9 @@ def acPlotSSTTimeSeries(dailySSTCsv):
     plt.yticks(fontsize=gutl.fontSizeTickLabels)
 
     plt.xlabel("Year", fontsize=gutl.fontSizeAxisLabel)
-    plt.ylabel("SST anomaly", fontsize=gutl.fontSizeAxisLabel)
+    plt.ylabel(plotTitle, fontsize=gutl.fontSizeAxisLabel)
 
-    plt.title("SST anomaly", fontsize=gutl.fontSizeTitle)
+    plt.title(plotTitle, fontsize=gutl.fontSizeTitle)
 
     plt.tight_layout()
 
@@ -132,8 +102,9 @@ def plotMeanMap(meanNcFileSpec, plotTitle):
    #newcmp = gvcmaps.NCV_jet
     newcmp = "jet"
     
-    vmin = np.nanpercentile(temp_av, .01)
-    vmax = np.nanpercentile(temp_av, 99.99)
+    vmin = 0
+   #vmax = np.nanpercentile(temp_av, 99.99)
+    vmax = 1.2
 
     # Contourf-plot data: external contour
     heatmap = temp_av.plot.contourf(ax=ax,
@@ -155,7 +126,7 @@ def plotMeanMap(meanNcFileSpec, plotTitle):
                                      yticks=np.linspace(37, 46, 10))
     
     cax = fig.add_subplot(gs[0, 2])
-    cbar_ticks=np.arange(5, 30, 1)
+    cbar_ticks=np.arange(vmin, vmax, .1)
     cbar = plt.colorbar(heatmap,
                         orientation='vertical',
                         ticks=cbar_ticks,
@@ -177,7 +148,7 @@ def plotMeanMap(meanNcFileSpec, plotTitle):
 
 
 
-def plotTrendMap(trendNcFileSpec):
+def plotTrendMap(trendNcFileSpec, plotTitle):
     """
     plots a map of trend loaded from the file/field specified by in meanNcFileSpec.
     input parameters:
@@ -190,21 +161,20 @@ def plotTrendMap(trendNcFileSpec):
     gs = gridspec.GridSpec(ncols=3, nrows=1, width_ratios=[1, .03, .03])
     fig = plt.figure(figsize=(17, 12))
 
-    ax = fig.add_subplot(gs[0, 0])
-
     projection = ccrs.PlateCarree()
-    ax = plt.axes(projection=projection)
+    ax = fig.add_subplot(gs[0, 0], projection=projection)
     ax.coastlines(linewidths=1,alpha=0.9999, resolution="10m")
     
-   #newcmp = gvcmaps.GMT_hot
-    newcmp = "hot_r"
-   #reversed_color_map = newcmp.reversed()
+    newcmp = "jet"
+    vmin = np.nanpercentile(t[trendNcFileSpec.varName], .001)
+    vmax = np.nanpercentile(t[trendNcFileSpec.varName], 99.999)
+    vmax = np.max([np.abs(vmin), np.abs(vmax)])
     
     heatmap = t[trendNcFileSpec.varName].plot.contourf(ax=ax,
                               transform=projection,
                               levels=50,
-                              vmin=0.025,
-                              vmax=0.055,
+                              vmin=-vmax,
+                              vmax=vmax,
                               cmap=newcmp,
                               add_colorbar=False)
     
@@ -219,7 +189,7 @@ def plotTrendMap(trendNcFileSpec):
     
     
     cax = fig.add_subplot(gs[0, 2])
-    cbar_ticks=np.arange(0.01, 0.07, 0.005)
+    cbar_ticks=np.linspace(-vmax, vmax, 9)
     cbar = plt.colorbar(heatmap,
                         orientation='vertical',
                         ticks=cbar_ticks,
@@ -231,7 +201,7 @@ def plotTrendMap(trendNcFileSpec):
     
     gvutil.set_titles_and_labels(
         ax,
-        maintitle="Trend of SST",
+        maintitle=plotTitle,
         maintitlefontsize=16,
         xlabel="",
         ylabel="")
