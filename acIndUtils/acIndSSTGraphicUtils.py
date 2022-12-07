@@ -15,8 +15,8 @@ import cartopy.feature as cfeature
 import cartopy.crs as ccrs
 from geocat.viz import util as gvutil   # python -m pip install geocat.viz
 
-from acIndUtils import acIndUtils
-from acIndUtils import acIndGrahUtils as gutl
+import acIndUtils
+import acIndGrahUtils as gutl
 
 
     

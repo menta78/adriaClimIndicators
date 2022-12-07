@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
-from acIndUtils import acIndUtils
-from acIndUtils import acIndGrahUtils as gutl
+import acIndUtils
+import acIndGrahUtils as gutl
 
 
 def acSalinityPlotVProfileAll(annual3DFlNcFileSpec, summer3DFlNcFileSpec, winter3DFlNcFileSpec, maxDepth, zlevs=None, psuLims=None):

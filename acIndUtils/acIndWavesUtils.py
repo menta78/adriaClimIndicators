@@ -3,7 +3,7 @@ import netCDF4
 import numpy as np
 import xarray as xr
 
-from acIndUtils import acIndUtils
+import acIndUtils
 
 
 def collectMonthlyHsData(inputNcFileSpec, outputNcFileSpec):
