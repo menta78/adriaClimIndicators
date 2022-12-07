@@ -78,7 +78,7 @@ def acPlotTimeSeries(dailySSTCsv, plotTitle):
 
 
 
-def plotMeanMap(meanNcFileSpec, plotTitle):
+def plotMeanMap(meanNcFileSpec, plotTitle, valRange):
     """
     plots the map of the mean field specified by in meanNcFileSpec.
     input parameters:
@@ -102,9 +102,9 @@ def plotMeanMap(meanNcFileSpec, plotTitle):
    #newcmp = gvcmaps.NCV_jet
     newcmp = "jet"
     
-    vmin = 0
+    vmin = valRange[0]
    #vmax = np.nanpercentile(temp_av, 99.99)
-    vmax = 1.2
+    vmax = valRange[1]
 
     # Contourf-plot data: external contour
     heatmap = temp_av.plot.contourf(ax=ax,

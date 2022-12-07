@@ -240,7 +240,7 @@ def acComputeAnnualTheilSenFitFromDailyFile(dailyCsvFile):
 
 
 
-def acComputeSenSlope2DMap(annualMapsNcSpec, outputNcFile, smoothingKernelSide=3):
+def acComputeSenSlope2DMap(annualMapsNcSpec, outputNcFile, smoothingKernelSide=3, otherVarNames=[]):
     """
     computeSenSlopeMap: generates a map with the sen's slope for each pixel, given the series of annual maps in file inputNcFile.
     input:
@@ -259,16 +259,20 @@ def acComputeSenSlope2DMap(annualMapsNcSpec, outputNcFile, smoothingKernelSide=3
   
     slp = xr.apply_ufunc(_compSenSlope, inputDs, input_core_dims=[["year"]], dask="allowed", vectorize=True)
 
-    # applying some smoothing by means of a convolution (2D only)
-    vls = slp[annualMapsNcSpec.varName].values
-    msk = (~np.isnan(vls)).astype(int)
-    vls[msk == 0] = 0
-    krnl = np.ones((smoothingKernelSide, smoothingKernelSide))
-    cellCount = signal.convolve2d(msk, krnl, mode="same")
-    cellCount[msk == 0] = 1
-    smoothedVls = signal.convolve2d(vls, krnl, mode="same")/cellCount
-    smoothedVls[msk == 0] = np.nan
-    slp[annualMapsNcSpec.varName].values = smoothedVls
+    varNames = [annualMapsNcSpec.varName]
+    varNames.extend(otherVarNames)
+
+    for varName in varNames:
+        # applying some smoothing by means of a convolution (2D only)
+        vls = slp[varName].values
+        msk = (~np.isnan(vls)).astype(int)
+        vls[msk == 0] = 0
+        krnl = np.ones((smoothingKernelSide, smoothingKernelSide))
+        cellCount = signal.convolve2d(msk, krnl, mode="same")
+        cellCount[msk == 0] = 1
+        smoothedVls = signal.convolve2d(vls, krnl, mode="same")/cellCount
+        smoothedVls[msk == 0] = np.nan
+        slp[varName].values = smoothedVls
 
     # saving
     slp.to_netcdf(outputNcFile)
