@@ -41,6 +41,29 @@ def acCloneFileSpec(src, **kwargs):
     return out
 
 
+def getNcFileName(dataset="adriaclim",
+                  model="NEMO",
+                  dataset_type="indicator",
+                  variable="variable",
+                  aggregation_type="mean/p95/anomaly",
+                  scenario="hist", # can be hist/proj/anomaly
+                  time_agg="monthly", # can be monthly, yearly, scenario
+                  domain="adriatic",
+                  year_start=1992,
+                  year_end=2011):
+    fnm = "_".join([dataset,
+                     model,
+                     dataset_type,
+                     variable,
+                     aggregation_type,
+                     scenario,
+                     time_agg,
+                     domain,
+                     str(year_start),
+                     str(year_end)]) + ".nc"
+    return fnm
+
+
 
 def _get3DMaskOnPolygon(lon, lat, map3D, polygon):
     # polygon is given in form of [xcoordinates, ycoordinates]
