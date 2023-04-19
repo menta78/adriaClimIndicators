@@ -1,112 +1,88 @@
-import os, random, shutil, subprocess, glob
-
+import glob
 import netCDF4
+import numpy as np
+import xarray as xr
 
 import acIndUtils
 
 
-mdlPath = os.path.dirname(os.path.abspath(__file__))
-erddapCmdTmpl = mdlPath + "/erddap-downloader.sh -u lorenzo.mentaschi -p chua2Hahrahyoo,g -d \"{datasetId}\" -r \"{year}/(.*)\""
-
-erddapDownloadSubdir = 'erddap.cmcc-opa.eu'
-
-cdocmd = "cdo"
-
-
-def monthMeanAggregator(inputNcFileSpec, outputNcFileSpec):
-    """
-    performs a monthly aggregation with cdo
-    """
-    cmd = f"{cdocmd} select,name={inputNcFileSpec.varName} -monmean -cat {inputNcFileSpec.ncFileName} {outputNcFileSpec.ncFileName}"
-    flnm_ = os.path.basename(outputNcFileSpec.ncFileName)
-    logfl = open(f'cdo_{flnm_}.log', 'w')
-    print("        ... monthly aggregation with the command")
-    print(f"          {cmd}")
-    subprocess.run(cmd.split(), stdout=logfl, stderr=logfl)
-    logfl.close()
-
-
-
-def erddapDownloadAndAggregate(indicatorNcVarName, datasetId, years, outdir, aggregator=monthMeanAggregator):
-    tmpdir = '../tmp/proc' + str(random.randint(0, 1e6)) 
-    outdir = os.path.abspath(outdir)
-    os.system(f"mkdir -p {tmpdir}")
-    os.system(f"mkdir -p {outdir}")
-
-    outFlNames = []
-
-    curdir = os.getcwd()
-    os.chdir(tmpdir)
+def getFiles(filePathTemplate, scenario, years):
+    fls = []
     for yr in years:
-        print(f"  processing year {yr}")
-        print("      ... downloading (will take a while) ...")
-        erddapCmd = erddapCmdTmpl.format(datasetId=datasetId, year=yr)
-        logfl = open('erddap_download.log', 'w')
-        subprocess.run([s.strip(' "') for s in erddapCmd.split()], stdout=logfl, stderr=logfl)
-        logfl.close()
-        
-        print("      ... linking the files in a single directory ...")
-        flsdir = erddapDownloadSubdir
-        cmd = f"find {flsdir}/ -iname \"*.nc\" | xargs -i ln -s {{}} ./"
-        os.system(cmd)
-
-        print("      ... aggregating the files (will take a while) ...")
-        fls = glob.glob("*.nc")
-        if fls == []:
-            print(f"          ... NOTHING FOUND for year {yr}, skipping ...")
-            continue
-        fltst = fls[0]
-        ds = netCDF4.Dataset(fltst)
-        vrtst = ds.variables[indicatorNcVarName]
-        assert vrtst.get_dims()[0].isunlimited(),\
-                'only dimensions (time, lat, lon), or (time, z, lat, lon) are supported'
-        if len(vrtst.shape) == 3:
-            (tVarName, yVarName, xVarName) = vrtst.dimensions
-            zVarName = ''
-        elif len(vrtst.shape) == 4:
-            (tVarName, zVarName, yVarName, xVarName) = vrtst.dimensions
-        ds.close()
-        inFlSpc = acIndUtils.acNcFileSpec(
-                ncFileName = '*.nc',
-                varName = indicatorNcVarName,
-                xVarName = xVarName,
-                yVarName = yVarName,
-                zVarName = zVarName,
-                tVarName = tVarName
-                )
-        outFlName = f"{indicatorNcVarName}_{yr}.nc"
-        outNcFlPth = os.path.join(outdir, outFlName)
-        outFlSpc = acIndUtils.acCloneFileSpec(inFlSpc, ncFileName=outNcFlPth)
-        aggregator(inFlSpc, outFlSpc)
-        
-        print("      ... tmp directory cleanup ..")
-        os.system("rm *.nc")
-        os.system("rm *.log")
-        shutil.rmtree(erddapDownloadSubdir)
-        outFlNames.append(outFlName)
-
-    os.chdir(curdir)
-    shutil.rmtree(tmpdir)
-    return outFlNames
-
-
-def mergeFiles(ncFlPaths, outNcFilePath):
-    ncFlPathStr = ' '.join(ncFlPaths)
-    cmd = f"{cdocmd} mergetime {ncFlPathStr} {outNcFilePath}"
-    subprocess.run(cmd.split())
+        flpth = filePathTemplate.format(scenario=scenario,
+                                        year=yr)
+        _fls = glob.glob(flpth)       
+        fls.extend(_fls)
+    fls.sort()
+    return fls
 
 
 
-def testErddapDownloadAndAggregate():
-    indicatorNcVarName = "sosstsst"
-    datasetId = "adriaclim_resm_nemo_historical_3h_T"
-    years = range(1992, 2012)
-    aggregator = monthMeanAggregator
-    outdir = './testOutput'
-    erddapDownloadAndAggregate(indicatorNcVarName, datasetId, years, outdir, aggregator=aggregator)
+def meanAggregator2D(dts, vrs, outVarName, outFl):
+    meanVr = np.mean(vrs, 0)
+
+    vrs_ = {outVarName: np.expand_dims(meanVr, 0)}
+    outFl.writeVariables([dts[0]], **vrs_)
 
 
-if __name__ == "__main__":
-    testErddapDownloadAndAggregate()
+def collectMonthlyData2D(inputNcFileSpec, outputNcFileSpec, 
+                         aggregator: meanAggregator2D,
+                         inputFiles: None):
+   #here ncFileName is assumed to be a wildcard pattern
+    if inputFiles is None:
+        fls = glob.glob(inputNcFileSpec.ncFileName)
+        fls.sort()
+    else:
+        fls = inputFiles
+    global outFl, actDt
+    outFl = None
 
+    varNames = [outputNcFileSpec.varName] 
+    
+    actDt = None
+
+    def getByMonth():
+        global outFl, actDt
+        vrs = []
+        dts = []
+        for flpth in fls:
+            inFl = netCDF4.Dataset(flpth)
+            xx = inFl.variables[inputNcFileSpec.xVarName]
+            yy = inFl.variables[inputNcFileSpec.yVarName]
+            tm = inFl.variables[inputNcFileSpec.tVarName]
+            vr = inFl.variables[inputNcFileSpec.varName]
+            try:
+                calendar = tm.calendar
+            except:
+                calendar = "standard"
+            dts_ = netCDF4.num2date(tm[:], tm.units, calendar)
+            if outFl is None:
+                print("  initializing ...")
+                actDt = dts_[0]
+                actDtStr = actDt.strftime("%Y-%m-%d")
+                print(f"    elaborating {actDt}")
+                timeUnitsStr = f"days since {actDtStr}"
+                outFl = acIndUtils.acNcFile(outputNcFileSpec, xx, yy, 
+                                            varNames=varNames,
+                                            timeUnitsStr=timeUnitsStr)
+                outFl.createFile()
+
+            for idt in range(len(dts_)):
+                dt = dts_[idt]
+                print(f"      {dt}")
+                if dt.month == actDt.month:
+                    vrs.append(vr[idt,...])
+                    dts.append(dt)
+                else:
+                    yield dts, np.array(vrs)
+                    actDt = dt
+                    print(f"    elaborating {actDt}")
+                    vrs = []
+                    dts = []
+        yield dts, np.array(vrs)
+
+    for dt, vrs in getByMonth():
+        aggregator(dt, vrs, outputNcFileSpec.varName, outFl)
+    if not outFl is None:
+        outFl.close()
 

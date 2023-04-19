@@ -42,26 +42,60 @@ def acCloneFileSpec(src, **kwargs):
 
 
 def getNcFileName(dataset="adriaclim",
-                  model="NEMO",
+                  source="NEMO",
                   dataset_type="indicator",
                   variable="variable",
-                  aggregation_type="mean/p95/anomaly",
+                  elaboration_type="mean/p95/anomaly",
                   scenario="hist", # can be hist/proj/anomaly
                   time_agg="monthly", # can be monthly, yearly, scenario
                   domain="adriatic",
                   year_start=1992,
                   year_end=2011):
     fnm = "_".join([dataset,
-                     model,
-                     dataset_type,
-                     variable,
-                     aggregation_type,
-                     scenario,
-                     time_agg,
-                     domain,
-                     str(year_start),
-                     str(year_end)]) + ".nc"
+                    source,
+                    dataset_type,
+                    variable,
+                    elaboration_type,
+                    scenario,
+                    time_agg,
+                    domain,
+                    str(year_start),
+                    str(year_end)]) + ".nc"
     return fnm
+
+
+def addMetadata(ncFilePath, ncVarName,
+                title = "title",
+                description = "description",
+                adriaclim_dataset = "indicator",
+                adriaclim_model = "NEMO",
+                adriaclim_scale = "adriatic",
+                adriaclim_timeperiod = "monthly",
+                adriaclim_type = "timeseries|anomaly|trend",
+                adriaclim_scenario = "hist|proj|anomaly",
+                institution = "UNIBO",
+                version = "0.0",
+                units = 'units'
+                ):
+    ds = netCDF4.Dataset(ncFilePath, 'r+')
+    ds.title = title
+    ds.description = description
+    ds.adriaclim_dataset = adriaclim_dataset
+    ds.adriaclim_model = adriaclim_model
+    ds.adriaclim_scale = adriaclim_scale
+    ds.adriaclim_timeperiod = adriaclim_timeperiod
+    ds.adriaclim_type = adriaclim_type
+    ds.adriaclim_scenario = adriaclim_scenario
+    ds.institution = institution
+    ds.version = version
+    ds[ncVarName].units = units
+    ds.close()
+
+
+def changeMetadata(ncFilePath, **kwargs):
+    ds = netCDF4.Dataset(ncFilePath, "r+")
+    for att in kwargs.keys():
+        setattr(ds, att, kwargs[att])
 
 
 
@@ -463,6 +497,25 @@ class acNcFile:
     def close(self):
         self.ds.close()
         self.ds = None
+
+
+
+def generateDifferencDataset(projNcFileSpec, 
+                             bslnNcFileSpec, 
+                             outNcFileSpec):
+
+    dsproj = xr.open_dataset(projNcFileSpec.ncFileName)
+    projmean = dsproj.mean(dim=projNcFileSpec.tVarName)
+    
+    dshist = xr.open_dataset(bslnNcFileSpec.ncFileName)
+    histmean = dshist.mean(dim=bslnNcFileSpec.tVarName)
+
+    dff = projmean - histmean
+
+    dff.to_netcdf(outNcFileSpec.ncFileName)
+
+    dsproj.close()
+    dshist.close()
         
 
 
