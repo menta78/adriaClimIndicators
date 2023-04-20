@@ -67,9 +67,9 @@ baselineNcFileSpec = acIndUtils.acNcFileSpec(
 inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate, 
                                       baselineScenarioName,
                                       baselineYears)
-#acIndAggregator.collectMonthlyData2D(inputNcFileSpec, baselineNcFileSpec, 
-#                                   aggregator = aggregatorComputeMeanPAR,
-#                                   inputFiles = inputFiles) 
+acIndAggregator.collectMonthlyData(inputNcFileSpec, baselineNcFileSpec, 
+                                   aggregator = aggregatorComputeMeanPAR,
+                                   inputFiles = inputFiles) 
 adriaclim_scenario = "hist"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(baselineNcFileSpec.ncFileName,
@@ -112,9 +112,9 @@ projectionNcFileSpec = acIndUtils.acNcFileSpec(
 inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate, 
                                       projectnScenarioName,
                                       projectnYears)
-#acIndAggregator.collectMonthlyData2D(inputNcFileSpec, projectionNcFileSpec, 
-#                                   aggregator = aggregatorComputeMeanPAR,
-#                                   inputFiles = inputFiles) 
+acIndAggregator.collectMonthlyData(inputNcFileSpec, projectionNcFileSpec, 
+                                   aggregator = aggregatorComputeMeanPAR,
+                                   inputFiles = inputFiles) 
 adriaclim_scenario = "proj"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(projectionNcFileSpec.ncFileName,

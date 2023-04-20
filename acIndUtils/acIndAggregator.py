@@ -18,16 +18,19 @@ def getFiles(filePathTemplate, scenario, years):
 
 
 
-def meanAggregator2D(dts, vrs, outVarName, outFl):
+def meanAggregator(dts, vrs, outVarName, outFl):
     meanVr = np.mean(vrs, 0)
 
     vrs_ = {outVarName: np.expand_dims(meanVr, 0)}
     outFl.writeVariables([dts[0]], **vrs_)
 
 
-def collectMonthlyData2D(inputNcFileSpec, outputNcFileSpec, 
-                         aggregator: meanAggregator2D,
-                         inputFiles: None):
+
+def collectMonthlyData(inputNcFileSpec, outputNcFileSpec, 
+                         aggregator = meanAggregator,
+                         inputFiles = None,
+                         coordsNcFileSpec = None,
+                         fill_value = None):
    #here ncFileName is assumed to be a wildcard pattern
     if inputFiles is None:
         fls = glob.glob(inputNcFileSpec.ncFileName)
@@ -41,14 +44,14 @@ def collectMonthlyData2D(inputNcFileSpec, outputNcFileSpec,
     
     actDt = None
 
+    is3d = inputNcFileSpec.zVarName != ""
+
     def getByMonth():
         global outFl, actDt
         vrs = []
         dts = []
         for flpth in fls:
             inFl = netCDF4.Dataset(flpth)
-            xx = inFl.variables[inputNcFileSpec.xVarName]
-            yy = inFl.variables[inputNcFileSpec.yVarName]
             tm = inFl.variables[inputNcFileSpec.tVarName]
             vr = inFl.variables[inputNcFileSpec.varName]
             try:
@@ -58,11 +61,23 @@ def collectMonthlyData2D(inputNcFileSpec, outputNcFileSpec,
             dts_ = netCDF4.num2date(tm[:], tm.units, calendar)
             if outFl is None:
                 print("  initializing ...")
+                zz = None
+                if coordsNcFileSpec is None:
+                    xx = inFl.variables[inputNcFileSpec.xVarName]
+                    yy = inFl.variables[inputNcFileSpec.yVarName]
+                    if is3d:
+                        zz = inFl.variables[inputNcFileSpec.zVarName]
+                else:
+                    coordsFl = netCDF4.Dataset(coordsNcFileSpec.ncFileName)
+                    xx = coordsFl.variables[coordsNcFileSpec.xVarName]
+                    yy = coordsFl.variables[coordsNcFileSpec.yVarName]
+                    if is3d:
+                        zz = coordsFl.variables[coordsNcFileSpec.zVarName]
                 actDt = dts_[0]
                 actDtStr = actDt.strftime("%Y-%m-%d")
                 print(f"    elaborating {actDt}")
                 timeUnitsStr = f"days since {actDtStr}"
-                outFl = acIndUtils.acNcFile(outputNcFileSpec, xx, yy, 
+                outFl = acIndUtils.acNcFile(outputNcFileSpec, xx, yy, zz=zz,
                                             varNames=varNames,
                                             timeUnitsStr=timeUnitsStr)
                 outFl.createFile()
@@ -70,15 +85,19 @@ def collectMonthlyData2D(inputNcFileSpec, outputNcFileSpec,
             for idt in range(len(dts_)):
                 dt = dts_[idt]
                 print(f"      {dt}")
+                vrdt = vr[idt,...]
+                if ((not fill_value is None)
+                        and (type(vrdt) is np.ma.core.MaskedArray)):
+                    vrdt = vrdt.filled(fill_value)
                 if dt.month == actDt.month:
-                    vrs.append(vr[idt,...])
+                    vrs.append(vrdt)
                     dts.append(dt)
                 else:
                     yield dts, np.array(vrs)
                     actDt = dt
                     print(f"    elaborating {actDt}")
-                    vrs = []
-                    dts = []
+                    vrs = [vrdt]
+                    dts = [dt]
         yield dts, np.array(vrs)
 
     for dt, vrs in getByMonth():

@@ -457,23 +457,32 @@ class acNcFile:
         if len(self.yy.shape) == 1:
             self.yDim = self.ds.createDimension(fs.yVarName, self.yy.shape[0])
             self.xDim = self.ds.createDimension(fs.xVarName, self.xx.shape[0])
-            self.yVar = self.ds.createVariable(fs.yVarName, 'f4', (fs.yVarName,))
-            self.xVar = self.ds.createVariable(fs.xVarName, 'f4', (fs.xVarName,))
+        elif len(self.yy.shape) == 2:
+            self.yDim = self.ds.createDimension(fs.yVarName, self.yy.shape[0])
+            self.xDim = self.ds.createDimension(fs.xVarName, self.xx.shape[1])
         else:
-            raise Exception("2d x, y coords: not yet supported")
+            raise Exception("x, y coords can only be 1D or 2D")
+        self.yVar = self.ds.createVariable(fs.yVarName, 'f4', (fs.yVarName,))
+        self.xVar = self.ds.createVariable(fs.xVarName, 'f4', (fs.xVarName,))
 
         self.tVar = self.ds.createVariable(fs.tVarName, 'f4', (fs.tVarName,))
         self.tVar.units = self.timeUnitsStr
         self.tVar.calendar = self.calendar
         if not self.zz is None:
-            self.zDim = self.ds.createDimension(fs.zVarName, zz.shape)
+            self.zDim = self.ds.createDimension(fs.zVarName, self.zz.shape[0])
             self.zVar = self.ds.createVariable(fs.zVarName, 'f4', 
                                               (fs.zVarName,))
             dims = [fs.tVarName, fs.zVarName, fs.yVarName, fs.xVarName]
         else:
             dims = [fs.tVarName, fs.yVarName, fs.xVarName]
-        self.yVar[:] = self.yy[:]
-        self.xVar[:] = self.xx[:]
+        if len(self.yy.shape) == 1:
+            self.yVar[:] = self.yy[:]
+            self.xVar[:] = self.xx[:]
+        elif len(self.yy.shape) == 2:
+            self.yVar[:] = self.yy[:, 0]
+            self.xVar[:] = self.xx[0, :]
+        if not self.zz is None:
+            self.zVar[:] = self.zz[:]
         self.vars = {}
         for varName in self.varNames:
             self.vars[varName] = self.ds.createVariable(varName,
