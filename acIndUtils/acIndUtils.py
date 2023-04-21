@@ -528,6 +528,17 @@ def generateDifferencDataset(projNcFileSpec,
         
 
 
+def addNavlonNavlatFields(ncFileSpec):
+    ds = netCDF4.Dataset(ncFileSpec.ncFileName, "r+")
+    x = ds.variables[ncFileSpec.xVarName][:]
+    y = ds.variables[ncFileSpec.yVarName][:]
+    lonmtx, latmtx = np.meshgrid(x, y)
+    nav_lon = ds.createVariable("nav_lon", 'f4', (ncFileSpec.yVarName, ncFileSpec.xVarName))
+    nav_lon[:] = lonmtx
+    nav_lat = ds.createVariable("nav_lat", 'f4', (ncFileSpec.yVarName, ncFileSpec.xVarName))
+    nav_lat[:] = latmtx
+    ds.close()
+    
 
 
 
