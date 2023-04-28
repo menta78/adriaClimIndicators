@@ -25,9 +25,45 @@ def meanAggregator(dts, vrs, outVarName, outFl):
     outFl.writeVariables([dts[0]], **vrs_)
 
 
+def dateFallsInMonthlyBucket(aDate, bucketDate):
+    return aDate.month == bucketDate.month
+
+
+
+def dateFallsInAnnualBucket(aDate, bucketDate):
+    return aDate.year == bucketDate.year
+
+
 
 def collectMonthlyData(inputNcFileSpec, outputNcFileSpec, 
                          aggregator = meanAggregator,
+                         inputFiles = None,
+                         coordsNcFileSpec = None,
+                         fill_value = None):
+    aggregateDataOverTime(inputNcFileSpec, outputNcFileSpec, 
+                         aggregator = meanAggregator,
+                         timeBucketFunction = dateFallsInMonthlyBucket,
+                         inputFiles = inputFiles,
+                         coordsNcFileSpec = coordsNcFileSpec,
+                         fill_value = fill_value)
+
+
+def collectAnnualData(inputNcFileSpec, outputNcFileSpec, 
+                         aggregator = meanAggregator,
+                         inputFiles = None,
+                         coordsNcFileSpec = None,
+                         fill_value = None):
+    aggregateDataOverTime(inputNcFileSpec, outputNcFileSpec, 
+                         aggregator = meanAggregator,
+                         timeBucketFunction = dateFallsInAnnualBucket,
+                         inputFiles = inputFiles,
+                         coordsNcFileSpec = coordsNcFileSpec,
+                         fill_value = fill_value)
+
+
+def aggregateDataOverTime(inputNcFileSpec, outputNcFileSpec, 
+                         aggregator = meanAggregator,
+                         timeBucketFunction = dateFallsInMonthlyBucket,
                          inputFiles = None,
                          coordsNcFileSpec = None,
                          fill_value = None):
@@ -89,7 +125,7 @@ def collectMonthlyData(inputNcFileSpec, outputNcFileSpec,
                 if ((not fill_value is None)
                         and (type(vrdt) is np.ma.core.MaskedArray)):
                     vrdt = vrdt.filled(fill_value)
-                if dt.month == actDt.month:
+                if timeBucketFunction(dt, actDt):
                     vrs.append(vrdt)
                     dts.append(dt)
                 else:

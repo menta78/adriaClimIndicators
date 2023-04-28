@@ -5,16 +5,16 @@ import numpy as np
 
 import acIndUtils, acIndAggregator
 
-indicatorName = "GO1"
-indicatorNcVarName = "pH"
+indicatorName = "GO2"
+indicatorNcVarName = "O2"
 
 erddapFilePathTemplate = "/data/products/ADRIACLIM_RESM/ERDDAP/BFM/{scenario}/BFM_5d_{year}*_grid_bfm.nc"
 
 modelName = 'BFM'
-variable = 'pH'
+variable = 'O2o'
 
-title = "G01, pH"
-description ="""Mean monthly pH
+title = "G02, oxygen"
+description ="""Mean monthly concentration of oxygen, in umol
 """
 adriaclim_dataset = "indicator"
 adriaclim_model = "BFM"
@@ -22,7 +22,7 @@ adriaclim_timeperiod = "monthly"
 adriaclim_type = "timeseries"
 adriaclim_scale = "adriatic"
 version = 0.0
-units = "None"
+units = "umol"
 
 
 baselineScenarioName = "historical"
@@ -59,8 +59,7 @@ inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate,
                                       baselineYears)
 acIndAggregator.collectMonthlyData(inputNcFileSpec, baselineNcFileSpec, 
                                    aggregator = acIndAggregator.meanAggregator,
-                                   inputFiles = inputFiles,
-                                   fill_value = np.nan) 
+                                   inputFiles = inputFiles) 
 adriaclim_scenario = "hist"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(baselineNcFileSpec.ncFileName,
@@ -105,8 +104,7 @@ inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate,
                                       projectnYears)
 acIndAggregator.collectMonthlyData(inputNcFileSpec, projectionNcFileSpec, 
                                    aggregator = acIndAggregator.meanAggregator,
-                                   inputFiles = inputFiles, 
-                                   fill_value = np.nan) 
+                                   inputFiles = inputFiles) 
 adriaclim_scenario = "proj"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(projectionNcFileSpec.ncFileName,
@@ -166,7 +164,7 @@ Trend computed using the Thiel/Sen slope approach.
 """
 
 print("computing the trend for historical")
-units = "pH/year"
+units = "umol/year"
 annualMeanFile = os.path.join(tmpOutDir, '_annualmean.nc')
 annualMeanFileSpec = acIndUtils.acCloneFileSpec(baselineNcFileSpec,
            ncFileName = annualMeanFile)
