@@ -55,10 +55,11 @@ baselineNcFileSpec = acIndUtils.acNcFileSpec(
 inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate, 
                                       baselineScenarioName,
                                       baselineYears)
-acIndAggregator.collectAnnualData(inputNcFileSpec, baselineNcFileSpec, 
-                                   aggregator = acIndUtils.meanAggregator,
+acIndAggregator.collectMonthlyData(inputNcFileSpec, baselineNcFileSpec, 
+                                   aggregator = acIndAggregator.meanAggregator,
                                    inputFiles = inputFiles,
-                                   fill_value = np.nan) 
+                                   fill_value = np.nan, 
+                                   lastYear = baselineYears[-1]) 
 adriaclim_scenario = "hist"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(baselineNcFileSpec.ncFileName,
@@ -101,10 +102,11 @@ projectionNcFileSpec = acIndUtils.acNcFileSpec(
 inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate, 
                                       projectnScenarioName,
                                       projectnYears)
-acIndAggregator.collectAnnualData(inputNcFileSpec, projectionNcFileSpec, 
-                                   aggregator = acIndUtils.meanAggregator,
+acIndAggregator.collectMonthlyData(inputNcFileSpec, projectionNcFileSpec, 
+                                   aggregator = acIndAggregator.meanAggregator,
                                    inputFiles = inputFiles, 
-                                   fill_value = np.nan)
+                                   fill_value = np.nan,
+                                   lastYear = projectnYears[-1]) 
 adriaclim_scenario = "proj"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(projectionNcFileSpec.ncFileName,

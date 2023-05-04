@@ -35,30 +35,16 @@ def dateFallsInAnnualBucket(aDate, bucketDate):
 
 
 
-def collectMonthlyData(inputNcFileSpec, outputNcFileSpec, 
-                         aggregator = meanAggregator,
-                         inputFiles = None,
-                         coordsNcFileSpec = None,
-                         fill_value = None):
+def collectMonthlyData(inputNcFileSpec, outputNcFileSpec, **kwargs):
     aggregateDataOverTime(inputNcFileSpec, outputNcFileSpec, 
-                         aggregator = meanAggregator,
                          timeBucketFunction = dateFallsInMonthlyBucket,
-                         inputFiles = inputFiles,
-                         coordsNcFileSpec = coordsNcFileSpec,
-                         fill_value = fill_value)
+                         **kwargs)
 
 
-def collectAnnualData(inputNcFileSpec, outputNcFileSpec, 
-                         aggregator = meanAggregator,
-                         inputFiles = None,
-                         coordsNcFileSpec = None,
-                         fill_value = None):
+def collectAnnualData(inputNcFileSpec, outputNcFileSpec, **kwargs):
     aggregateDataOverTime(inputNcFileSpec, outputNcFileSpec, 
-                         aggregator = meanAggregator,
                          timeBucketFunction = dateFallsInAnnualBucket,
-                         inputFiles = inputFiles,
-                         coordsNcFileSpec = coordsNcFileSpec,
-                         fill_value = fill_value)
+                         **kwargs)
 
 
 def aggregateDataOverTime(inputNcFileSpec, outputNcFileSpec, 
@@ -66,7 +52,8 @@ def aggregateDataOverTime(inputNcFileSpec, outputNcFileSpec,
                          timeBucketFunction = dateFallsInMonthlyBucket,
                          inputFiles = None,
                          coordsNcFileSpec = None,
-                         fill_value = None):
+                         fill_value = None,
+                         lastYear = None):
    #here ncFileName is assumed to be a wildcard pattern
     if inputFiles is None:
         fls = glob.glob(inputNcFileSpec.ncFileName)
@@ -118,6 +105,9 @@ def aggregateDataOverTime(inputNcFileSpec, outputNcFileSpec,
                                             timeUnitsStr=timeUnitsStr)
                 outFl.createFile()
 
+            def beyondLastYear(dt):
+                return (not lastYear is None) and (dt.year > lastYear)
+
             for idt in range(len(dts_)):
                 dt = dts_[idt]
                 print(f"      {dt}")
@@ -130,6 +120,10 @@ def aggregateDataOverTime(inputNcFileSpec, outputNcFileSpec,
                     dts.append(dt)
                 else:
                     yield dts, np.array(vrs)
+                    if beyondLastYear(dt):
+                        print(f"    time {dt} beyond last year {lastYear}, breaking the loop")
+                        dts, vrs = None, None
+                        break
                     actDt = dt
                     print(f"    elaborating {actDt}")
                     vrs = [vrdt]
@@ -137,7 +131,8 @@ def aggregateDataOverTime(inputNcFileSpec, outputNcFileSpec,
         yield dts, np.array(vrs)
 
     for dt, vrs in getByMonth():
-        aggregator(dt, vrs, outputNcFileSpec.varName, outFl)
+        if not dt is None:
+            aggregator(dt, vrs, outputNcFileSpec.varName, outFl)
     if not outFl is None:
         outFl.close()
 

@@ -27,7 +27,6 @@ units = "m"
 
 baselineScenarioName = "historical"
 baselineYears = range(1992, 2012)
-#baselineYears = range(1992, 1995)
 projectnScenarioName = "projection"
 projectnYears = range(2031, 2051)
 #projectnYears = range(2022, 2025)
@@ -38,9 +37,9 @@ os.system(f'mkdir -p {outDir}')
 
 
 def p95Aggregator(dts, vrs, outVarName, outFl):
-    fifthPerc = np.percentile(vrs, 95, 0)
+    perc = np.percentile(vrs, 95, 0)
 
-    vrs_ = {outVarName: np.expand_dims(fifthPerc, 0)}
+    vrs_ = {outVarName: np.expand_dims(perc, 0)}
     outFl.writeVariables([dts[0]], **vrs_)
 
 
@@ -66,7 +65,8 @@ inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate,
 acIndAggregator.collectAnnualData(inputNcFileSpec, baselineNcFileSpec, 
                                    aggregator = p95Aggregator,
                                    inputFiles = inputFiles,
-                                   fill_value = np.nan) 
+                                   fill_value = np.nan,
+                                   lastYear = baselineYears[-1]) 
 adriaclim_scenario = "hist"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(baselineNcFileSpec.ncFileName,
@@ -112,7 +112,8 @@ inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate,
 acIndAggregator.collectAnnualData(inputNcFileSpec, projectionNcFileSpec, 
                                    aggregator = p95Aggregator,
                                    inputFiles = inputFiles, 
-                                   fill_value = np.nan)
+                                   fill_value = np.nan,
+                                   lastYear = projectnYears[-1]) 
 adriaclim_scenario = "proj"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(projectionNcFileSpec.ncFileName,
