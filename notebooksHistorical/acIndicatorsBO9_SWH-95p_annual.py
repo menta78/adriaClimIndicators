@@ -5,7 +5,7 @@ import numpy as np
 
 import acIndUtils, acIndAggregator
 
-indicatorName = "BO9"
+indicatorName = "BO9-95p"
 indicatorNcVarName = "SWH"
 
 erddapFilePathTemplate = "/data/inputs/metocean/AdriaClim/UniBo/WAVES_SINCE_1993/WAVES_WHM0/*_hourly_reanalsis_significant_wave_height_AdriaticSea.nc"
