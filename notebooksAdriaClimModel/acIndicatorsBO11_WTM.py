@@ -3,26 +3,26 @@ sys.path.append('../acIndUtils')
 
 import numpy as np
 
-import acIndUtils, acIndAggregator, acIndWavesUtils
+import acIndUtils, acIndAggregator
 
-indicatorName = "BO8"
-indicatorNcVarName = "SWH"
+indicatorName = "B11"
+indicatorNcVarName = "TM"
 
 erddapFilePathTemplate = "/data/products/ADRIACLIM_RESM/WW3/NEWWRF_WIND/{scenario}/3h/{year}/*/ww3.*.nc"
 
 modelName = 'WW3'
-variable = 'hs'
+variable = 't0m1'
 
-title = "B08, Rough Sea Days"
-description ="""Count of days when rough-sea conditions (Hs>2.5 m) are met.
+title = "B11, Mean Period tm01 (s)"
+description ="""Mean monthly wave period (s).
 """
 adriaclim_dataset = "indicator"
-adriaclim_model = modelName
+adriaclim_model = "WW3"
 adriaclim_timeperiod = "monthly"
 adriaclim_type = "timeseries"
 adriaclim_scale = "adriatic"
 version = 0.0
-units = "n days"
+units = "s"
 
 
 baselineScenarioName = "historical"
@@ -34,8 +34,6 @@ projectnYears = range(2031, 2051)
 
 outDir = indicatorName + '_indicator'
 os.system(f'mkdir -p {outDir}')
-
-
 
 
 
@@ -58,7 +56,7 @@ inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate,
                                       baselineScenarioName,
                                       baselineYears)
 acIndAggregator.collectMonthlyData(inputNcFileSpec, baselineNcFileSpec, 
-                                   aggregator = acIndWavesUtils.countRoughSeaDays,
+                                   aggregator = acIndAggregator.meanAggregator,
                                    inputFiles = inputFiles,
                                    fill_value = np.nan, 
                                    lastYear = baselineYears[-1]) 
@@ -105,7 +103,7 @@ inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate,
                                       projectnScenarioName,
                                       projectnYears)
 acIndAggregator.collectMonthlyData(inputNcFileSpec, projectionNcFileSpec, 
-                                   aggregator = acIndWavesUtils.countRoughSeaDays,
+                                   aggregator = acIndAggregator.meanAggregator,
                                    inputFiles = inputFiles, 
                                    fill_value = np.nan,
                                    lastYear = projectnYears[-1]) 
@@ -168,7 +166,7 @@ Trend computed using the Thiel/Sen slope approach.
 """
 
 print("computing the trend for historical")
-units = "n days/year"
+units = "s/year"
 annualMeanFile = os.path.join(tmpOutDir, '_annualmean.nc')
 annualMeanFileSpec = acIndUtils.acCloneFileSpec(baselineNcFileSpec,
            ncFileName = annualMeanFile)
