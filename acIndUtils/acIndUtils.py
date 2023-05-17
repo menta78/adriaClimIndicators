@@ -331,6 +331,11 @@ def acComputeSenSlope2DMap(annualMapsNcSpec, outputNcFile, smoothingKernelSide=3
         smoothedVls[msk == 0] = np.nan
         slp[varName].values = smoothedVls
 
+    # adding time dimension
+    tmcrd = dsproj[annualMapsNcSpec.tVarName].mean()
+    tmcrd = tmcrd.expand_dims(annualMapsNcSpec.tVarName)
+    slp = slp.expand_dims({annualMapsNcSpec.tVarName: tmcrd}, axis=0)
+
     # saving
     slp.to_netcdf(outputNcFile)
 
@@ -353,6 +358,11 @@ def acComputeSenSlope3DMap(annualMapsNcSpec, outputNcFile):
       return medslope
   
     slp = xr.apply_ufunc(_compSenSlope, inputDs, input_core_dims=[["year"]], dask="allowed", vectorize=True)
+
+    # adding time dimension
+    tmcrd = dsproj[annualMapsNcSpec.tVarName].mean()
+    tmcrd = tmcrd.expand_dims(annualMapsNcSpec.tVarName)
+    slp = slp.expand_dims({annualMapsNcSpec.tVarName: tmcrd}, axis=0)
 
     # saving
     slp.to_netcdf(outputNcFile)
@@ -520,6 +530,10 @@ def generateDifferencDataset(projNcFileSpec,
     histmean = dshist.mean(dim=bslnNcFileSpec.tVarName)
 
     dff = projmean - histmean
+
+    tmcrd = dsproj[projNcFileSpec.tVarName].mean()
+    tmcrd = tmcrd.expand_dims(projNcFileSpec.tVarName)
+    dff = dff.expand_dims({projNcFileSpec.tVarName: tmcrd}, axis=0)
 
     dff.to_netcdf(outNcFileSpec.ncFileName)
 
