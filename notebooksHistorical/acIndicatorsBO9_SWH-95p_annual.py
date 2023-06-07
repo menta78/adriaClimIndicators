@@ -56,6 +56,7 @@ inputNcFileSpec = acIndUtils.acNcFileSpec(
 baselineNcFileSpec = acIndUtils.acNcFileSpec(
                           ncFileName = outNcFlPath, varName = indicatorNcVarName,
                           xVarName = "longitude", yVarName = "latitude", tVarName = "time")
+import pdb; pdb.set_trace()
 acIndAggregator.collectAnnualData(inputNcFileSpec, baselineNcFileSpec, 
                                    aggregator = p95Aggregator,
                                    fill_value = np.nan, 
@@ -117,3 +118,22 @@ acIndUtils.addMetadata(trendFilePath,
                        units = units
                        )
 os.system(f"rm {tmpOutDir}/*")
+
+
+
+
+
+# graphs on baseline
+from matplotlib import pyplot as plt
+import acIndWavesGraphicUtils
+
+tmpAnnualNcFileSpec = acIndUtils.acCloneFileSpec(baselineNcFileSpec, ncFileName="tmpAnnual.nc")
+tmpWinterNcFileSpec = acIndUtils.acCloneFileSpec(baselineNcFileSpec, ncFileName="tmpWinter.nc")
+tmpSummerNcFileSpec = acIndUtils.acCloneFileSpec(baselineNcFileSpec, ncFileName="tmpSummer.nc")
+acIndUtils.acGenerateAnnualMeanMaps(baselineNcFileSpec, tmpAnnualNcFileSpec.ncFileName)
+pltRange = [0, 2.52]
+annualPlot = acIndWavesGraphicUtils.plotMeanMap(tmpAnnualNcFileSpec, "95p Annual SWH (m)", pltRange)
+plt.savefig(f'annualMap{indicatorName}.png', dpi=200)
+os.system("rm tmp*.nc")
+
+

@@ -11,6 +11,7 @@ import csv
 import netCDF4
 from scipy import stats
 
+import cartopy as cart
 import cartopy.feature as cfeature
 import cartopy.crs as ccrs
 from geocat.viz import util as gvutil   # python -m pip install geocat.viz
@@ -97,6 +98,7 @@ def plotMeanMap(meanNcFileSpec, plotTitle, valRange):
     ax = fig.add_subplot(gs[0, 0], projection=projection)
     #  coastlines, and adding features
     ax.coastlines(linewidths=1, alpha=0.9999, resolution="10m")
+    ax.add_feature(cart.feature.LAND, zorder=100, edgecolor='k')
     
     # Import an NCL colormap
    #newcmp = gvcmaps.NCV_jet

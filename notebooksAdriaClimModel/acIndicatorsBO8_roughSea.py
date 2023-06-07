@@ -9,11 +9,12 @@ indicatorName = "BO8"
 indicatorNcVarName = "SWH"
 
 erddapFilePathTemplate = "/data/products/ADRIACLIM_RESM/WW3/NEWWRF_WIND/{scenario}/3h/{year}/*/ww3.*.nc"
+erddapFilePathTemplate = "/data/products/ADRIACLIM_RESM/WW3/COSMO_WIND/{scenario}/3h/{year}/*/ww3.*.nc"
 
 modelName = 'WW3'
 variable = 'hs'
 
-title = "B08, Rough Sea Days"
+title = "BO8, Rough Sea Days"
 description ="""Count of days when rough-sea conditions (Hs>2.5 m) are met.
 """
 adriaclim_dataset = "indicator"
@@ -101,7 +102,10 @@ inputNcFileSpec = acIndUtils.acNcFileSpec(
 projectionNcFileSpec = acIndUtils.acNcFileSpec(
                           ncFileName = outNcFlPath, varName = indicatorNcVarName,
                           xVarName = "longitude", yVarName = "latitude", tVarName = "time")
-inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate, 
+#inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate, 
+flpthTemporary = "/data/products/ADRIACLIM_RESM/WW3/NEWWRF_WIND/projection/ww3.{year}*.nc"
+flpthTemporary = "/data/products/ADRIACLIM_RESM/WW3/COSMO_WIND/projection/ww3.{year}*.nc"
+inputFiles = acIndAggregator.getFiles(flpthTemporary, 
                                       projectnScenarioName,
                                       projectnYears)
 acIndAggregator.collectMonthlyData(inputNcFileSpec, projectionNcFileSpec, 
@@ -229,7 +233,29 @@ acIndUtils.addMetadata(trendFilePath,
                        version = version,
                        units = units
                        )
+
+
+
+
+
+# graphs on baseline
+from matplotlib import pyplot as plt
+import acIndWavesGraphicUtils
+
+tmpAnnualNcFileSpec = acIndUtils.acCloneFileSpec(baselineNcFileSpec, ncFileName=os.path.join(tmpOutDir, "tmpAnnual.nc"))
+tmpWinterNcFileSpec = acIndUtils.acCloneFileSpec(baselineNcFileSpec, ncFileName=os.path.join(tmpOutDir, "tmpWinter.nc"))
+tmpSummerNcFileSpec = acIndUtils.acCloneFileSpec(baselineNcFileSpec, ncFileName=os.path.join(tmpOutDir, "tmpSummer.nc"))
+acIndUtils.acGenerateAnnualMeanMaps(baselineNcFileSpec, tmpAnnualNcFileSpec.ncFileName)
+acIndUtils.acGenerateSeasonalWinter(baselineNcFileSpec, tmpWinterNcFileSpec.ncFileName)
+acIndUtils.acGenerateSeasonalSummer(baselineNcFileSpec, tmpSummerNcFileSpec.ncFileName)
+pltRange = [0, 3]
+annualPlot = acIndWavesGraphicUtils.plotMeanMap(tmpAnnualNcFileSpec, "Mean Monthly count of rough-sea days", pltRange)
+plt.savefig(f'annualMap{indicatorName}.png', dpi=200)
+winterPlot = acIndWavesGraphicUtils.plotMeanMap(tmpWinterNcFileSpec, "Mean Winter Monthly count of rough-sea days", pltRange)
+plt.savefig(f'winterMap{indicatorName}.png', dpi=200)
+summerPlot = acIndWavesGraphicUtils.plotMeanMap(tmpSummerNcFileSpec, "Mean Summer Monthly count of rough-sea days", pltRange)
+plt.savefig(f'summerMap{indicatorName}.png', dpi=200)
+
+
+
 os.system(f"rm -rf {tmpOutDir}")
-
-
-

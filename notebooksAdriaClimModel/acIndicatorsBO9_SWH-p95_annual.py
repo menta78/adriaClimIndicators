@@ -9,6 +9,7 @@ indicatorName = "BO9-95p"
 indicatorNcVarName = "SWH"
 
 erddapFilePathTemplate = "/data/products/ADRIACLIM_RESM/WW3/NEWWRF_WIND/{scenario}/3h/{year}/*/ww3.*.nc"
+erddapFilePathTemplate = "/data/products/ADRIACLIM_RESM/WW3/COSMO_WIND/{scenario}/3h/{year}/*/ww3.*.nc"
 
 modelName = 'WW3'
 variable = 'hs'
@@ -106,7 +107,10 @@ inputNcFileSpec = acIndUtils.acNcFileSpec(
 projectionNcFileSpec = acIndUtils.acNcFileSpec(
                           ncFileName = outNcFlPath, varName = indicatorNcVarName,
                           xVarName = "longitude", yVarName = "latitude", tVarName = "time")
-inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate, 
+#inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate, 
+flpthTemporary = "/data/products/ADRIACLIM_RESM/WW3/NEWWRF_WIND/projection/ww3.{year}*.nc"
+flpthTemporary = "/data/products/ADRIACLIM_RESM/WW3/COSMO_WIND/projection/ww3.{year}*.nc"
+inputFiles = acIndAggregator.getFiles(flpthTemporary, 
                                       projectnScenarioName,
                                       projectnYears)
 acIndAggregator.collectAnnualData(inputNcFileSpec, projectionNcFileSpec, 
@@ -234,7 +238,21 @@ acIndUtils.addMetadata(trendFilePath,
                        version = version,
                        units = units
                        )
+
+
+
+
+
+# graphs on baseline
+from matplotlib import pyplot as plt
+import acIndWavesGraphicUtils
+
+tmpAnnualNcFileSpec = acIndUtils.acCloneFileSpec(baselineNcFileSpec, ncFileName=os.path.join(tmpOutDir, "tmpAnnual.nc"))
+acIndUtils.acGenerateAnnualMeanMaps(baselineNcFileSpec, tmpAnnualNcFileSpec.ncFileName)
+pltRange = [0, 2.52]
+annualPlot = acIndWavesGraphicUtils.plotMeanMap(tmpAnnualNcFileSpec, "95p Annual SWH (m)", pltRange)
+plt.savefig(f'annualMap{indicatorName}.png', dpi=200)
+
+
 os.system(f"rm -rf {tmpOutDir}")
-
-
 

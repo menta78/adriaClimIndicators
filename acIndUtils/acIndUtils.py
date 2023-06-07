@@ -332,7 +332,7 @@ def acComputeSenSlope2DMap(annualMapsNcSpec, outputNcFile, smoothingKernelSide=3
         slp[varName].values = smoothedVls
 
     # adding time dimension
-    tmcrd = dsproj[annualMapsNcSpec.tVarName].mean()
+    tmcrd = inputDs["year"].mean()
     tmcrd = tmcrd.expand_dims(annualMapsNcSpec.tVarName)
     slp = slp.expand_dims({annualMapsNcSpec.tVarName: tmcrd}, axis=0)
 

@@ -5,7 +5,7 @@ import numpy as np
 
 import acIndUtils, acIndAggregator
 
-indicatorName = "B11"
+indicatorName = "BO11"
 indicatorNcVarName = "TM"
 
 erddapFilePathTemplate = "/data/inputs/metocean/AdriaClim/UniBo/WAVES_SINCE_1993/WAVES_VTM10/*_cmems_hourly_reanalysis_waves_vtm10_AdriaticSea.nc"
@@ -13,7 +13,7 @@ erddapFilePathTemplate = "/data/inputs/metocean/AdriaClim/UniBo/WAVES_SINCE_1993
 modelName = 'CMEMS'
 variable = 'VTM10'
 
-title = "B11, Mean Period tm01 (s)"
+title = "BO11, Mean Period tm01 (s)"
 description ="""Mean monthly wave period (s).
 """
 adriaclim_dataset = "indicator"
@@ -109,3 +109,28 @@ acIndUtils.addMetadata(trendFilePath,
                        units = units
                        )
 os.system(f"rm {tmpOutDir}/*")
+
+
+
+
+
+# graphs on baseline
+from matplotlib import pyplot as plt
+import acIndWavesGraphicUtils
+
+tmpAnnualNcFileSpec = acIndUtils.acCloneFileSpec(baselineNcFileSpec, ncFileName="tmpAnnual.nc")
+tmpWinterNcFileSpec = acIndUtils.acCloneFileSpec(baselineNcFileSpec, ncFileName="tmpWinter.nc")
+tmpSummerNcFileSpec = acIndUtils.acCloneFileSpec(baselineNcFileSpec, ncFileName="tmpSummer.nc")
+acIndUtils.acGenerateAnnualMeanMaps(baselineNcFileSpec, tmpAnnualNcFileSpec.ncFileName)
+acIndUtils.acGenerateSeasonalWinter(baselineNcFileSpec, tmpWinterNcFileSpec.ncFileName)
+acIndUtils.acGenerateSeasonalSummer(baselineNcFileSpec, tmpSummerNcFileSpec.ncFileName)
+pltRange = [0, 5]
+annualPlot = acIndWavesGraphicUtils.plotMeanMap(tmpAnnualNcFileSpec, "Mean Annual WTM (s)", pltRange)
+plt.savefig(f'annualMap{indicatorName}.png', dpi=200)
+winterPlot = acIndWavesGraphicUtils.plotMeanMap(tmpWinterNcFileSpec, "Mean Winter WTM (s)", pltRange)
+plt.savefig(f'winterMap{indicatorName}.png', dpi=200)
+summerPlot = acIndWavesGraphicUtils.plotMeanMap(tmpSummerNcFileSpec, "Mean Summer WTM (s)", pltRange)
+plt.savefig(f'summerMap{indicatorName}.png', dpi=200)
+os.system("rm tmp*.nc")
+
+
