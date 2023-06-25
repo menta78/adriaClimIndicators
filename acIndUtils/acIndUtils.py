@@ -333,8 +333,10 @@ def acComputeSenSlope2DMap(annualMapsNcSpec, outputNcFile, smoothingKernelSide=3
 
     # adding time dimension
     tmcrd = inputDs["year"].mean()
-    tmcrd = tmcrd.expand_dims(annualMapsNcSpec.tVarName)
-    slp = slp.expand_dims({annualMapsNcSpec.tVarName: tmcrd}, axis=0)
+    yr = np.round(tmcrd.values).astype(int)
+    unitsStr = f"days since {yr}-01-01"
+    slp = slp.expand_dims({annualMapsNcSpec.tVarName: [0]}, axis=0)
+    slp[annualMapsNcSpec.tVarName].attrs = {"units": unitsStr}
 
     # saving
     slp.to_netcdf(outputNcFile)
@@ -360,9 +362,11 @@ def acComputeSenSlope3DMap(annualMapsNcSpec, outputNcFile):
     slp = xr.apply_ufunc(_compSenSlope, inputDs, input_core_dims=[["year"]], dask="allowed", vectorize=True)
 
     # adding time dimension
-    tmcrd = dsproj[annualMapsNcSpec.tVarName].mean()
-    tmcrd = tmcrd.expand_dims(annualMapsNcSpec.tVarName)
-    slp = slp.expand_dims({annualMapsNcSpec.tVarName: tmcrd}, axis=0)
+    tmcrd = inputDs["year"].mean()
+    yr = np.round(tmcrd.values).astype(int)
+    unitsStr = f"days since {yr}-01-01"
+    slp = slp.expand_dims({annualMapsNcSpec.tVarName: [0]}, axis=0)
+    slp[annualMapsNcSpec.tVarName].attrs = {"units": unitsStr}
 
     # saving
     slp.to_netcdf(outputNcFile)

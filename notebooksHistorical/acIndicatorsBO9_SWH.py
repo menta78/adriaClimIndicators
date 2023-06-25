@@ -14,8 +14,7 @@ modelName = 'CMEMS'
 variable = 'VHM0'
 
 title = "B09, Significant Wave Height"
-description ="""Mean monthly significant wave height (m).
-"""
+description = "Mean monthly significant wave height (m)."
 adriaclim_dataset = "indicator"
 adriaclim_model = modelName
 adriaclim_timeperiod = "monthly"
@@ -73,10 +72,7 @@ acIndUtils.addMetadata(baselineNcFileSpec.ncFileName,
 tmpOutDir = os.path.join(outDir, 'tmp')
 os.system(f'mkdir -p {tmpOutDir}')
 
-description +=\
-"""
-Trend computed using the Thiel/Sen slope approach.
-"""
+description += " Trend computed using the Thiel/Sen slope approach."
 
 print("computing the trend for historical")
 units = "m/year"
@@ -95,9 +91,10 @@ acIndUtils.acGenerateAnnualMeanMaps(baselineNcFileSpec, annualMeanFile)
 acIndUtils.acComputeSenSlope2DMap(annualMeanFileSpec, trendFilePath)
 adriaclim_scenario = "hist"
 adriaclim_type = "trend"
+title_ = title + ". trend (m/y)"
 acIndUtils.addMetadata(trendFilePath,
                        annualMeanFileSpec.varName,
-                       title = title,
+                       title = title_,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,

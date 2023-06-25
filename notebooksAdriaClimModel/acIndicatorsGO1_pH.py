@@ -9,13 +9,13 @@ indicatorName = "GO1"
 indicatorNcVarName = "pH"
 
 erddapFilePathTemplate = "/data/products/ADRIACLIM_RESM/ERDDAP/BFM/{scenario}/BFM_5d_{year}*_grid_bfm.nc"
+erddapFilePathTemplate = "/work/opa/lm09621/data/adriaClim/projectionOutput1/output/{scenario}/BFM_5d_{year}*_grid_bfm.nc"
 
 modelName = 'BFM'
 variable = 'pH'
 
 title = "G01, pH"
-description ="""Mean monthly pH
-"""
+description ="Mean monthly pH."
 adriaclim_dataset = "indicator"
 adriaclim_model = "BFM"
 adriaclim_timeperiod = "monthly"
@@ -63,9 +63,10 @@ acIndAggregator.collectMonthlyData(inputNcFileSpec, baselineNcFileSpec,
                                    fill_value = np.nan) 
 adriaclim_scenario = "hist"
 adriaclim_type = "timeseries"
+_title = title + ", " + adriaclim_scenario
 acIndUtils.addMetadata(baselineNcFileSpec.ncFileName,
                        baselineNcFileSpec.varName,
-                       title = title,
+                       title = _title,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,
@@ -109,9 +110,10 @@ acIndAggregator.collectMonthlyData(inputNcFileSpec, projectionNcFileSpec,
                                    fill_value = np.nan) 
 adriaclim_scenario = "proj"
 adriaclim_type = "timeseries"
+_title = title + ", " + adriaclim_scenario
 acIndUtils.addMetadata(projectionNcFileSpec.ncFileName,
                        projectionNcFileSpec.varName,
-                       title = title,
+                       title = _title,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,
@@ -141,9 +143,10 @@ acIndUtils.generateDifferencDataset(projectionNcFileSpec,
                                     diffNcFileSpec)
 adriaclim_scenario = "anomaly"
 adriaclim_type = "anomaly"
+_title = title + ", difference"
 acIndUtils.addMetadata(diffNcFileSpec.ncFileName,
                        diffNcFileSpec.varName,
-                       title = title,
+                       title = _title,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,
@@ -160,10 +163,7 @@ acIndUtils.addMetadata(diffNcFileSpec.ncFileName,
 tmpOutDir = os.path.join(outDir, 'tmp')
 os.system(f'mkdir -p {tmpOutDir}')
 
-description +=\
-"""
-Trend computed using the Thiel/Sen slope approach.
-"""
+description += " Trend computed using the Thiel/Sen slope approach."
 
 print("computing the trend for historical")
 units = "pH/year"
@@ -182,9 +182,10 @@ acIndUtils.acGenerateAnnualMeanMaps(baselineNcFileSpec, annualMeanFile)
 acIndUtils.acComputeSenSlope3DMap(annualMeanFileSpec, trendFilePath)
 adriaclim_scenario = "hist"
 adriaclim_type = "trend"
+_title = title + ", trend, " + adriaclim_scenario
 acIndUtils.addMetadata(trendFilePath,
                        annualMeanFileSpec.varName,
-                       title = title,
+                       title = _title,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,
@@ -214,9 +215,10 @@ acIndUtils.acGenerateAnnualMeanMaps(projectionNcFileSpec, annualMeanFile)
 acIndUtils.acComputeSenSlope3DMap(annualMeanFileSpec, trendFilePath)
 adriaclim_scenario = "proj"
 adriaclim_type = "trend"
+_title = title + ", trend, " + adriaclim_scenario
 acIndUtils.addMetadata(trendFilePath,
                        annualMeanFileSpec.varName,
-                       title = title,
+                       title = _title,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,

@@ -14,15 +14,14 @@ modelName = 'CMEMS'
 variable = 'VHM0'
 
 title = "B08, Rough Sea Days"
-description ="""Count of days when rough-sea conditions (Hs>2.5 m) are met.
-"""
+description ="""Count of days when rough-sea conditions (Hs>2.5 m) are met."""
 adriaclim_dataset = "indicator"
 adriaclim_model = modelName
 adriaclim_timeperiod = "monthly"
 adriaclim_type = "timeseries"
 adriaclim_scale = "adriatic"
 version = 0.0
-units = "n days"
+units = "n days/month"
 
 
 baselineScenarioName = "historical"
@@ -73,13 +72,10 @@ acIndUtils.addMetadata(baselineNcFileSpec.ncFileName,
 tmpOutDir = os.path.join(outDir, 'tmp')
 os.system(f'mkdir -p {tmpOutDir}')
 
-description +=\
-"""
-Trend computed using the Thiel/Sen slope approach.
-"""
+description += " Trend computed using the Thiel/Sen slope approach."
 
 print("computing the trend for historical")
-units = "m/year"
+units = "n days/month/year"
 annualMeanFile = os.path.join(tmpOutDir, '_annualmean.nc')
 annualMeanFileSpec = acIndUtils.acCloneFileSpec(baselineNcFileSpec,
            ncFileName = annualMeanFile)
@@ -95,9 +91,10 @@ acIndUtils.acGenerateAnnualMeanMaps(baselineNcFileSpec, annualMeanFile)
 acIndUtils.acComputeSenSlope2DMap(annualMeanFileSpec, trendFilePath)
 adriaclim_scenario = "hist"
 adriaclim_type = "trend"
+_title = title + ", trend"
 acIndUtils.addMetadata(trendFilePath,
                        annualMeanFileSpec.varName,
-                       title = title,
+                       title = _title,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,

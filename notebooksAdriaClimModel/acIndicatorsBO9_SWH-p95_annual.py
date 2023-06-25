@@ -9,14 +9,13 @@ indicatorName = "BO9-95p"
 indicatorNcVarName = "SWH"
 
 erddapFilePathTemplate = "/data/products/ADRIACLIM_RESM/WW3/NEWWRF_WIND/{scenario}/3h/{year}/*/ww3.*.nc"
-erddapFilePathTemplate = "/data/products/ADRIACLIM_RESM/WW3/COSMO_WIND/{scenario}/3h/{year}/*/ww3.*.nc"
+#erddapFilePathTemplate = "/data/products/ADRIACLIM_RESM/WW3/COSMO_WIND/{scenario}/3h/{year}/*/ww3.*.nc"
 
 modelName = 'WW3'
 variable = 'hs'
 
 title = "B09, Significant Wave Height, 95p"
-description ="""Annual 95th percentile of 3-hour significant wave height (m).
-"""
+description ="Annual 95th percentile of 3-hour significant wave height (m)."
 adriaclim_dataset = "indicator"
 adriaclim_model = "WW3"
 adriaclim_timeperiod = "yearly"
@@ -63,11 +62,11 @@ baselineNcFileSpec = acIndUtils.acNcFileSpec(
 inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate, 
                                       baselineScenarioName,
                                       baselineYears)
-acIndAggregator.collectAnnualData(inputNcFileSpec, baselineNcFileSpec, 
-                                   aggregator = p95Aggregator,
-                                   inputFiles = inputFiles,
-                                   fill_value = np.nan,
-                                   lastYear = baselineYears[-1]) 
+#acIndAggregator.collectAnnualData(inputNcFileSpec, baselineNcFileSpec, 
+#                                   aggregator = p95Aggregator,
+#                                   inputFiles = inputFiles,
+#                                   fill_value = np.nan,
+#                                   lastYear = baselineYears[-1]) 
 adriaclim_scenario = "hist"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(baselineNcFileSpec.ncFileName,
@@ -109,15 +108,15 @@ projectionNcFileSpec = acIndUtils.acNcFileSpec(
                           xVarName = "longitude", yVarName = "latitude", tVarName = "time")
 #inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate, 
 flpthTemporary = "/data/products/ADRIACLIM_RESM/WW3/NEWWRF_WIND/projection/ww3.{year}*.nc"
-flpthTemporary = "/data/products/ADRIACLIM_RESM/WW3/COSMO_WIND/projection/ww3.{year}*.nc"
+#flpthTemporary = "/data/products/ADRIACLIM_RESM/WW3/COSMO_WIND/projection/ww3.{year}*.nc"
 inputFiles = acIndAggregator.getFiles(flpthTemporary, 
                                       projectnScenarioName,
                                       projectnYears)
-acIndAggregator.collectAnnualData(inputNcFileSpec, projectionNcFileSpec, 
-                                   aggregator = p95Aggregator,
-                                   inputFiles = inputFiles, 
-                                   fill_value = np.nan,
-                                   lastYear = projectnYears[-1]) 
+#acIndAggregator.collectAnnualData(inputNcFileSpec, projectionNcFileSpec, 
+#                                   aggregator = p95Aggregator,
+#                                   inputFiles = inputFiles, 
+#                                   fill_value = np.nan,
+#                                   lastYear = projectnYears[-1]) 
 adriaclim_scenario = "proj"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(projectionNcFileSpec.ncFileName,
@@ -152,9 +151,10 @@ acIndUtils.generateDifferencDataset(projectionNcFileSpec,
                                     diffNcFileSpec)
 adriaclim_scenario = "anomaly"
 adriaclim_type = "anomaly"
+_title = title + ", difference"
 acIndUtils.addMetadata(diffNcFileSpec.ncFileName,
                        diffNcFileSpec.varName,
-                       title = title,
+                       title = _title,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,
@@ -171,10 +171,7 @@ acIndUtils.addMetadata(diffNcFileSpec.ncFileName,
 tmpOutDir = os.path.join(outDir, 'tmp')
 os.system(f'mkdir -p {tmpOutDir}')
 
-description +=\
-"""
-Trend computed using the Thiel/Sen slope approach.
-"""
+description += "Trend computed using the Thiel/Sen slope approach."
 
 print("computing the trend for historical")
 units = "m/year"
@@ -193,9 +190,10 @@ acIndUtils.acGenerateAnnualMeanMaps(baselineNcFileSpec, annualMeanFile)
 acIndUtils.acComputeSenSlope2DMap(annualMeanFileSpec, trendFilePath)
 adriaclim_scenario = "hist"
 adriaclim_type = "trend"
+_title = title + ", trend"
 acIndUtils.addMetadata(trendFilePath,
                        annualMeanFileSpec.varName,
-                       title = title,
+                       title = _title,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,
@@ -227,7 +225,7 @@ adriaclim_scenario = "proj"
 adriaclim_type = "trend"
 acIndUtils.addMetadata(trendFilePath,
                        annualMeanFileSpec.varName,
-                       title = title,
+                       title = _title,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,

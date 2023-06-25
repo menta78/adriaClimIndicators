@@ -14,8 +14,7 @@ modelName = 'CMEMS'
 variable = 'VHM0'
 
 title = "B09, Significant Wave Height, 95p"
-description ="""Annual 95th percentile of 3-hour significant wave height (m).
-"""
+description = "Annual 95th percentile of 3-hour significant wave height (m)."
 adriaclim_dataset = "indicator"
 adriaclim_model = modelName
 adriaclim_timeperiod = "monthly"
@@ -56,7 +55,6 @@ inputNcFileSpec = acIndUtils.acNcFileSpec(
 baselineNcFileSpec = acIndUtils.acNcFileSpec(
                           ncFileName = outNcFlPath, varName = indicatorNcVarName,
                           xVarName = "longitude", yVarName = "latitude", tVarName = "time")
-import pdb; pdb.set_trace()
 acIndAggregator.collectAnnualData(inputNcFileSpec, baselineNcFileSpec, 
                                    aggregator = p95Aggregator,
                                    fill_value = np.nan, 
@@ -82,10 +80,7 @@ acIndUtils.addMetadata(baselineNcFileSpec.ncFileName,
 tmpOutDir = os.path.join(outDir, 'tmp')
 os.system(f'mkdir -p {tmpOutDir}')
 
-description +=\
-"""
-Trend computed using the Thiel/Sen slope approach.
-"""
+description += " Trend computed using the Thiel/Sen slope approach."
 
 print("computing the trend for historical")
 units = "m/year"
@@ -104,9 +99,10 @@ acIndUtils.acGenerateAnnualMeanMaps(baselineNcFileSpec, annualMeanFile)
 acIndUtils.acComputeSenSlope2DMap(annualMeanFileSpec, trendFilePath)
 adriaclim_scenario = "hist"
 adriaclim_type = "trend"
+_title = title + ", trend"
 acIndUtils.addMetadata(trendFilePath,
                        annualMeanFileSpec.varName,
-                       title = title,
+                       title = _title,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,

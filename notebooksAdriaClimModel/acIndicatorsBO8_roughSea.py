@@ -9,14 +9,13 @@ indicatorName = "BO8"
 indicatorNcVarName = "SWH"
 
 erddapFilePathTemplate = "/data/products/ADRIACLIM_RESM/WW3/NEWWRF_WIND/{scenario}/3h/{year}/*/ww3.*.nc"
-erddapFilePathTemplate = "/data/products/ADRIACLIM_RESM/WW3/COSMO_WIND/{scenario}/3h/{year}/*/ww3.*.nc"
+#erddapFilePathTemplate = "/data/products/ADRIACLIM_RESM/WW3/COSMO_WIND/{scenario}/3h/{year}/*/ww3.*.nc"
 
 modelName = 'WW3'
 variable = 'hs'
 
 title = "BO8, Rough Sea Days"
-description ="""Count of days when rough-sea conditions (Hs>2.5 m) are met.
-"""
+description = "Count of days when rough-sea conditions (Hs>2.5 m) are met."
 adriaclim_dataset = "indicator"
 adriaclim_model = modelName
 adriaclim_timeperiod = "monthly"
@@ -104,7 +103,7 @@ projectionNcFileSpec = acIndUtils.acNcFileSpec(
                           xVarName = "longitude", yVarName = "latitude", tVarName = "time")
 #inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate, 
 flpthTemporary = "/data/products/ADRIACLIM_RESM/WW3/NEWWRF_WIND/projection/ww3.{year}*.nc"
-flpthTemporary = "/data/products/ADRIACLIM_RESM/WW3/COSMO_WIND/projection/ww3.{year}*.nc"
+#flpthTemporary = "/data/products/ADRIACLIM_RESM/WW3/COSMO_WIND/projection/ww3.{year}*.nc"
 inputFiles = acIndAggregator.getFiles(flpthTemporary, 
                                       projectnScenarioName,
                                       projectnYears)
@@ -147,9 +146,10 @@ acIndUtils.generateDifferencDataset(projectionNcFileSpec,
                                     diffNcFileSpec)
 adriaclim_scenario = "anomaly"
 adriaclim_type = "anomaly"
+_title = title + ", difference"
 acIndUtils.addMetadata(diffNcFileSpec.ncFileName,
                        diffNcFileSpec.varName,
-                       title = title,
+                       title = _title,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,
@@ -166,10 +166,7 @@ acIndUtils.addMetadata(diffNcFileSpec.ncFileName,
 tmpOutDir = os.path.join(outDir, 'tmp')
 os.system(f'mkdir -p {tmpOutDir}')
 
-description +=\
-"""
-Trend computed using the Thiel/Sen slope approach.
-"""
+description += " Trend computed using the Thiel/Sen slope approach."
 
 print("computing the trend for historical")
 units = "n days/year"
@@ -188,9 +185,10 @@ acIndUtils.acGenerateAnnualMeanMaps(baselineNcFileSpec, annualMeanFile)
 acIndUtils.acComputeSenSlope2DMap(annualMeanFileSpec, trendFilePath)
 adriaclim_scenario = "hist"
 adriaclim_type = "trend"
+_title = title + ", trend"
 acIndUtils.addMetadata(trendFilePath,
                        annualMeanFileSpec.varName,
-                       title = title,
+                       title = _title,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,
@@ -222,7 +220,7 @@ adriaclim_scenario = "proj"
 adriaclim_type = "trend"
 acIndUtils.addMetadata(trendFilePath,
                        annualMeanFileSpec.varName,
-                       title = title,
+                       title = _title,
                        description = description,
                        adriaclim_dataset = adriaclim_dataset,
                        adriaclim_model = adriaclim_model,
