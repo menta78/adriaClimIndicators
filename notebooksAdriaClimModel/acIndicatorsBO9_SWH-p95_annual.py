@@ -62,11 +62,11 @@ baselineNcFileSpec = acIndUtils.acNcFileSpec(
 inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate, 
                                       baselineScenarioName,
                                       baselineYears)
-#acIndAggregator.collectAnnualData(inputNcFileSpec, baselineNcFileSpec, 
-#                                   aggregator = p95Aggregator,
-#                                   inputFiles = inputFiles,
-#                                   fill_value = np.nan,
-#                                   lastYear = baselineYears[-1]) 
+acIndAggregator.collectAnnualData(inputNcFileSpec, baselineNcFileSpec, 
+                                   aggregator = p95Aggregator,
+                                   inputFiles = inputFiles,
+                                   fill_value = np.nan,
+                                   lastYear = baselineYears[-1]) 
 adriaclim_scenario = "hist"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(baselineNcFileSpec.ncFileName,
@@ -112,11 +112,11 @@ flpthTemporary = "/data/products/ADRIACLIM_RESM/WW3/NEWWRF_WIND/projection/ww3.{
 inputFiles = acIndAggregator.getFiles(flpthTemporary, 
                                       projectnScenarioName,
                                       projectnYears)
-#acIndAggregator.collectAnnualData(inputNcFileSpec, projectionNcFileSpec, 
-#                                   aggregator = p95Aggregator,
-#                                   inputFiles = inputFiles, 
-#                                   fill_value = np.nan,
-#                                   lastYear = projectnYears[-1]) 
+acIndAggregator.collectAnnualData(inputNcFileSpec, projectionNcFileSpec, 
+                                   aggregator = p95Aggregator,
+                                   inputFiles = inputFiles, 
+                                   fill_value = np.nan,
+                                   lastYear = projectnYears[-1]) 
 adriaclim_scenario = "proj"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(projectionNcFileSpec.ncFileName,

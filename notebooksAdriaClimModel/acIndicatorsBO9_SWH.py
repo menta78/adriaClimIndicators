@@ -55,11 +55,11 @@ baselineNcFileSpec = acIndUtils.acNcFileSpec(
 inputFiles = acIndAggregator.getFiles(erddapFilePathTemplate, 
                                       baselineScenarioName,
                                       baselineYears)
-#acIndAggregator.collectMonthlyData(inputNcFileSpec, baselineNcFileSpec, 
-#                                   aggregator = acIndAggregator.meanAggregator,
-#                                   inputFiles = inputFiles,
-#                                   fill_value = np.nan, 
-#                                   lastYear = baselineYears[-1]) 
+acIndAggregator.collectMonthlyData(inputNcFileSpec, baselineNcFileSpec, 
+                                   aggregator = acIndAggregator.meanAggregator,
+                                   inputFiles = inputFiles,
+                                   fill_value = np.nan, 
+                                   lastYear = baselineYears[-1]) 
 adriaclim_scenario = "hist"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(baselineNcFileSpec.ncFileName,
@@ -105,11 +105,11 @@ flpthTemporary = "/data/products/ADRIACLIM_RESM/WW3/NEWWRF_WIND/projection/ww3.{
 inputFiles = acIndAggregator.getFiles(flpthTemporary, 
                                       projectnScenarioName,
                                       projectnYears)
-#acIndAggregator.collectMonthlyData(inputNcFileSpec, projectionNcFileSpec, 
-#                                   aggregator = acIndAggregator.meanAggregator,
-#                                   inputFiles = inputFiles, 
-#                                   fill_value = np.nan,
-#                                   lastYear = projectnYears[-1]) 
+acIndAggregator.collectMonthlyData(inputNcFileSpec, projectionNcFileSpec, 
+                                   aggregator = acIndAggregator.meanAggregator,
+                                   inputFiles = inputFiles, 
+                                   fill_value = np.nan,
+                                   lastYear = projectnYears[-1]) 
 adriaclim_scenario = "proj"
 adriaclim_type = "timeseries"
 acIndUtils.addMetadata(projectionNcFileSpec.ncFileName,
